@@ -1,10 +1,10 @@
 require 'spec_helper'
 
 describe Projects::DiscussionsController do
-  let(:user)    { create(:user) }
-  let(:project) { create(:project) }
-  let(:merge_request) { create(:merge_request, source_project: project) }
-  let(:note) { create(:diff_note_on_merge_request, noteable: merge_request, project: project) }
+  let(:user) { create(:user) }
+  let(:merge_request) { create(:merge_request) }
+  let(:project) { merge_request.source_project }
+  let(:note) { create(:discussion_note_on_merge_request, noteable: merge_request, project: project) }
   let(:discussion) { note.discussion }
 
   let(:request_params) do
@@ -25,7 +25,7 @@ describe Projects::DiscussionsController do
       it "returns status 404" do
         post :resolve, request_params
 
-        expect(response).to have_http_status(404)
+        expect(response).to have_gitlab_http_status(404)
       end
     end
 
@@ -42,7 +42,7 @@ describe Projects::DiscussionsController do
         it "returns status 404" do
           post :resolve, request_params
 
-          expect(response).to have_http_status(404)
+          expect(response).to have_gitlab_http_status(404)
         end
       end
 
@@ -69,7 +69,7 @@ describe Projects::DiscussionsController do
         it "returns status 200" do
           post :resolve, request_params
 
-          expect(response).to have_http_status(200)
+          expect(response).to have_gitlab_http_status(200)
         end
       end
     end
@@ -86,7 +86,7 @@ describe Projects::DiscussionsController do
       it "returns status 404" do
         delete :unresolve, request_params
 
-        expect(response).to have_http_status(404)
+        expect(response).to have_gitlab_http_status(404)
       end
     end
 
@@ -103,7 +103,7 @@ describe Projects::DiscussionsController do
         it "returns status 404" do
           delete :unresolve, request_params
 
-          expect(response).to have_http_status(404)
+          expect(response).to have_gitlab_http_status(404)
         end
       end
 
@@ -117,7 +117,7 @@ describe Projects::DiscussionsController do
         it "returns status 200" do
           delete :unresolve, request_params
 
-          expect(response).to have_http_status(200)
+          expect(response).to have_gitlab_http_status(200)
         end
       end
     end

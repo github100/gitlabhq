@@ -1,41 +1,43 @@
+# encoding: utf-8
+
 require 'spec_helper'
 require Rails.root.join('db', 'migrate', '20161124141322_migrate_process_commit_worker_jobs.rb')
 
 describe MigrateProcessCommitWorkerJobs do
-  let(:project) { create(:project) }
+  let(:project) { create(:project, :repository) }
   let(:user) { create(:user) }
-  let(:commit) { project.commit.raw.raw_commit }
+  let(:commit) { project.commit.raw.rugged_commit }
 
   describe 'Project' do
     describe 'find_including_path' do
       it 'returns Project instances' do
-        expect(described_class::Project.find_including_path(project.id)).
-          to be_an_instance_of(described_class::Project)
+        expect(described_class::Project.find_including_path(project.id))
+          .to be_an_instance_of(described_class::Project)
       end
 
       it 'selects the full path for every Project' do
-        migration_project = described_class::Project.
-          find_including_path(project.id)
+        migration_project = described_class::Project
+          .find_including_path(project.id)
 
-        expect(migration_project[:path_with_namespace]).
-          to eq(project.path_with_namespace)
+        expect(migration_project[:path_with_namespace])
+          .to eq(project.full_path)
       end
     end
 
     describe '#repository_storage_path' do
       it 'returns the storage path for the repository' do
-        migration_project = described_class::Project.
-          find_including_path(project.id)
+        migration_project = described_class::Project
+          .find_including_path(project.id)
 
-        expect(File.directory?(migration_project.repository_storage_path)).
-          to eq(true)
+        expect(File.directory?(migration_project.repository_storage_path))
+          .to eq(true)
       end
     end
 
     describe '#repository_path' do
       it 'returns the path to the repository' do
-        migration_project = described_class::Project.
-          find_including_path(project.id)
+        migration_project = described_class::Project
+          .find_including_path(project.id)
 
         expect(File.directory?(migration_project.repository_path)).to eq(true)
       end
@@ -43,20 +45,24 @@ describe MigrateProcessCommitWorkerJobs do
 
     describe '#repository' do
       it 'returns a Rugged::Repository' do
-        migration_project = described_class::Project.
-          find_including_path(project.id)
+        migration_project = described_class::Project
+          .find_including_path(project.id)
 
-        expect(migration_project.repository).
-          to be_an_instance_of(Rugged::Repository)
+        expect(migration_project.repository)
+          .to be_an_instance_of(Rugged::Repository)
       end
     end
   end
 
-  describe '#up', :redis do
+  describe '#up', :clean_gitlab_redis_shared_state do
     let(:migration) { described_class.new }
 
     def job_count
       Sidekiq.redis { |r| r.llen('queue:process_commit') }
+    end
+
+    def pop_job
+      JSON.parse(Sidekiq.redis { |r| r.lpop('queue:process_commit') })
     end
 
     before do
@@ -67,9 +73,9 @@ describe MigrateProcessCommitWorkerJobs do
     end
 
     it 'skips jobs using a project that no longer exists' do
-      allow(described_class::Project).to receive(:find_including_path).
-        with(project.id).
-        and_return(nil)
+      allow(described_class::Project).to receive(:find_including_path)
+        .with(project.id)
+        .and_return(nil)
 
       migration.up
 
@@ -77,9 +83,9 @@ describe MigrateProcessCommitWorkerJobs do
     end
 
     it 'skips jobs using commits that no longer exist' do
-      allow_any_instance_of(Rugged::Repository).to receive(:lookup).
-        with(commit.oid).
-        and_raise(Rugged::OdbError)
+      allow_any_instance_of(Rugged::Repository).to receive(:lookup)
+        .with(commit.oid)
+        .and_raise(Rugged::OdbError)
 
       migration.up
 
@@ -92,11 +98,28 @@ describe MigrateProcessCommitWorkerJobs do
       expect(job_count).to eq(1)
     end
 
+    it 'encodes data to UTF-8' do
+      allow_any_instance_of(Rugged::Repository).to receive(:lookup)
+        .with(commit.oid)
+        .and_return(commit)
+
+      allow(commit).to receive(:message)
+        .and_return('김치'.force_encoding('BINARY'))
+
+      migration.up
+
+      job = pop_job
+
+      # We don't care so much about what is being stored, instead we just want
+      # to make sure the encoding is right so that JSON encoding the data
+      # doesn't produce any errors.
+      expect(job['args'][2]['message'].encoding).to eq(Encoding::UTF_8)
+    end
+
     context 'a migrated job' do
       let(:job) do
         migration.up
-
-        JSON.load(Sidekiq.redis { |r| r.lpop('queue:process_commit') })
+        pop_job
       end
 
       let(:commit_hash) do
@@ -149,7 +172,7 @@ describe MigrateProcessCommitWorkerJobs do
     end
   end
 
-  describe '#down', :redis do
+  describe '#down', :clean_gitlab_redis_shared_state do
     let(:migration) { described_class.new }
 
     def job_count
@@ -175,7 +198,7 @@ describe MigrateProcessCommitWorkerJobs do
       let(:job) do
         migration.down
 
-        JSON.load(Sidekiq.redis { |r| r.lpop('queue:process_commit') })
+        JSON.parse(Sidekiq.redis { |r| r.lpop('queue:process_commit') })
       end
 
       it 'includes the project ID' do

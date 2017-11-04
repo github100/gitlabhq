@@ -15,16 +15,6 @@ module CommitsHelper
     commit_person_link(commit, options.merge(source: :committer))
   end
 
-  def image_diff_class(diff)
-    if diff.deleted_file
-      "deleted"
-    elsif diff.new_file
-      "added"
-    else
-      nil
-    end
-  end
-
   def commit_to_html(commit, ref, project)
     render 'projects/commits/commit',
       commit: commit,
@@ -40,7 +30,7 @@ module CommitsHelper
     crumbs = content_tag(:li) do
       link_to(
         @project.path,
-        namespace_project_commits_path(@project.namespace, @project, @ref)
+        project_commits_path(@project, @ref)
       )
     end
 
@@ -52,8 +42,7 @@ module CommitsHelper
           # The text is just the individual part, but the link needs all the parts before it
           link_to(
             part,
-            namespace_project_commits_path(
-              @project.namespace,
+            project_commits_path(
               @project,
               tree_join(@ref, parts[0..i].join('/'))
             )
@@ -74,12 +63,8 @@ module CommitsHelper
   # Returns the sorted alphabetically links to branches, separated by a comma
   def commit_branches_links(project, branches)
     branches.sort.map do |branch|
-      link_to(
-        namespace_project_tree_path(project.namespace, project, branch)
-      ) do
-        content_tag :span, class: 'label label-gray' do
-          icon('code-fork') + ' ' + branch
-        end
+      link_to(project_ref_path(project, branch), class: "label label-gray ref-name") do
+        icon('code-fork') + " #{branch}"
       end
     end.join(" ").html_safe
   end
@@ -88,39 +73,32 @@ module CommitsHelper
   def commit_tags_links(project, tags)
     sorted = VersionSorter.rsort(tags)
     sorted.map do |tag|
-      link_to(
-        namespace_project_commits_path(project.namespace, project,
-                                       project.repository.find_tag(tag).name)
-      ) do
-        content_tag :span, class: 'label label-gray' do
-          icon('tag') + ' ' + tag
-        end
+      link_to(project_ref_path(project, tag), class: "label label-gray ref-name") do
+        icon('tag') + " #{tag}"
       end
     end.join(" ").html_safe
   end
 
   def link_to_browse_code(project, commit)
+    return unless current_controller?(:commits)
+
     if @path.blank?
       return link_to(
-        "Browse Files",
-        namespace_project_tree_path(project.namespace, project, commit),
+        _("Browse Files"),
+        project_tree_path(project, commit),
         class: "btn btn-default"
       )
-    end
-
-    return unless current_controller?(:projects, :commits)
-
-    if @repo.blob_at(commit.id, @path)
+    elsif @repo.blob_at(commit.id, @path)
       return link_to(
-        "Browse File",
-        namespace_project_blob_path(project.namespace, project,
+        _("Browse File"),
+        project_blob_path(project,
                                     tree_join(commit.id, @path)),
         class: "btn btn-default"
       )
     elsif @path.present?
       return link_to(
-        "Browse Directory",
-        namespace_project_tree_path(project.namespace, project,
+        _("Browse Directory"),
+        project_tree_path(project,
                                     tree_join(commit.id, @path)),
         class: "btn btn-default"
       )
@@ -128,50 +106,15 @@ module CommitsHelper
   end
 
   def revert_commit_link(commit, continue_to_path, btn_class: nil, has_tooltip: true)
-    return unless current_user
-
-    tooltip = "Revert this #{commit.change_type_title} in a new merge request" if has_tooltip
-
-    if can_collaborate_with_project?
-      btn_class = "btn btn-warning btn-#{btn_class}" unless btn_class.nil?
-      link_to 'Revert', '#modal-revert-commit', 'data-toggle' => 'modal', 'data-container' => 'body', title: (tooltip if has_tooltip), class: "#{btn_class} #{'has-tooltip' if has_tooltip}"
-    elsif can?(current_user, :fork_project, @project)
-      continue_params = {
-        to: continue_to_path,
-        notice: edit_in_new_fork_notice + ' Try to revert this commit again.',
-        notice_now: edit_in_new_fork_notice_now
-      }
-      fork_path = namespace_project_forks_path(@project.namespace, @project,
-        namespace_key: current_user.namespace.id,
-        continue: continue_params)
-
-      btn_class = "btn btn-grouped btn-warning" unless btn_class.nil?
-
-      link_to 'Revert', fork_path, class: btn_class, method: :post, 'data-toggle' => 'tooltip', 'data-container' => 'body', title: (tooltip if has_tooltip)
-    end
+    commit_action_link('revert', commit, continue_to_path, btn_class: btn_class, has_tooltip: has_tooltip)
   end
 
   def cherry_pick_commit_link(commit, continue_to_path, btn_class: nil, has_tooltip: true)
-    return unless current_user
+    commit_action_link('cherry-pick', commit, continue_to_path, btn_class: btn_class, has_tooltip: has_tooltip)
+  end
 
-    tooltip = "Cherry-pick this #{commit.change_type_title} in a new merge request"
-
-    if can_collaborate_with_project?
-      btn_class = "btn btn-default btn-#{btn_class}" unless btn_class.nil?
-      link_to 'Cherry-pick', '#modal-cherry-pick-commit', 'data-toggle' => 'modal', 'data-container' => 'body', title: (tooltip if has_tooltip), class: "#{btn_class} #{'has-tooltip' if has_tooltip}"
-    elsif can?(current_user, :fork_project, @project)
-      continue_params = {
-        to: continue_to_path,
-        notice: edit_in_new_fork_notice + ' Try to cherry-pick this commit again.',
-        notice_now: edit_in_new_fork_notice_now
-      }
-      fork_path = namespace_project_forks_path(@project.namespace, @project,
-        namespace_key: current_user.namespace.id,
-        continue: continue_params)
-
-      btn_class = "btn btn-grouped btn-close" unless btn_class.nil?
-      link_to 'Cherry-pick', fork_path, class: "#{btn_class}", method: :post, 'data-toggle' => 'tooltip', 'data-container' => 'body', title: (tooltip if has_tooltip)
-    end
+  def commit_signature_badge_classes(additional_classes)
+    %w(btn gpg-status-box) + Array(additional_classes)
   end
 
   protected
@@ -185,16 +128,16 @@ module CommitsHelper
   #  avatar: true will prepend the avatar image
   #  size:   size of the avatar image in px
   def commit_person_link(commit, options = {})
-    user = commit.send(options[:source])
+    user = commit.public_send(options[:source]) # rubocop:disable GitlabSecurity/PublicSend
 
-    source_name = clean(commit.send "#{options[:source]}_name".to_sym)
-    source_email = clean(commit.send "#{options[:source]}_email".to_sym)
+    source_name  = clean(commit.public_send(:"#{options[:source]}_name"))  # rubocop:disable GitlabSecurity/PublicSend
+    source_email = clean(commit.public_send(:"#{options[:source]}_email")) # rubocop:disable GitlabSecurity/PublicSend
 
     person_name = user.try(:name) || source_name
 
     text =
       if options[:avatar]
-        %Q{<span class="commit-#{options[:source]}-name">#{person_name}</span>}
+        content_tag(:span, person_name, class: "commit-#{options[:source]}-name")
       else
         person_name
       end
@@ -205,20 +148,55 @@ module CommitsHelper
     }
 
     if user.nil?
-      mail_to(source_email, text.html_safe, options)
+      mail_to(source_email, text, options)
     else
-      link_to(text.html_safe, user_path(user), options)
+      link_to(text, user_path(user), options)
     end
   end
 
-  def view_file_btn(commit_sha, diff_new_path, project)
+  def commit_action_link(action, commit, continue_to_path, btn_class: nil, has_tooltip: true)
+    return unless current_user
+
+    tooltip = "#{action.capitalize} this #{commit.change_type_title(current_user)} in a new merge request" if has_tooltip
+    btn_class = "btn btn-#{btn_class}" unless btn_class.nil?
+
+    if can_collaborate_with_project?
+      link_to action.capitalize, "#modal-#{action}-commit", 'data-toggle' => 'modal', 'data-container' => 'body', title: (tooltip if has_tooltip), class: "#{btn_class} #{'has-tooltip' if has_tooltip}"
+    elsif can?(current_user, :fork_project, @project)
+      continue_params = {
+        to: continue_to_path,
+        notice: "#{edit_in_new_fork_notice} Try to #{action} this commit again.",
+        notice_now: edit_in_new_fork_notice_now
+      }
+      fork_path = project_forks_path(@project,
+        namespace_key: current_user.namespace.id,
+        continue: continue_params)
+
+      link_to action.capitalize, fork_path, class: btn_class, method: :post, 'data-toggle' => 'tooltip', 'data-container' => 'body', title: (tooltip if has_tooltip)
+    end
+  end
+
+  def view_file_button(commit_sha, diff_new_path, project, replaced: false)
+    title = replaced ? _('View replaced file @ ') : _('View file @ ')
+
     link_to(
-      namespace_project_blob_path(project.namespace, project,
+      project_blob_path(project,
                                   tree_join(commit_sha, diff_new_path)),
-      class: 'btn view-file js-view-file btn-file-option'
+      class: 'btn view-file js-view-file'
     ) do
-      raw('View file @') + content_tag(:span, commit_sha[0..6],
-                                       class: 'commit-short-id')
+      raw(title) + content_tag(:span, Commit.truncate_sha(commit_sha),
+                                       class: 'commit-sha')
+    end
+  end
+
+  def view_on_environment_button(commit_sha, diff_new_path, environment)
+    return unless environment && commit_sha
+
+    external_url = environment.external_url_for(diff_new_path, commit_sha)
+    return unless external_url
+
+    link_to(external_url, class: 'btn btn-file-option has-tooltip', target: '_blank', rel: 'noopener noreferrer', title: "View on #{environment.formatted_external_url}", data: { container: 'body' }) do
+      icon('external-link')
     end
   end
 

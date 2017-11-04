@@ -1,13 +1,13 @@
 require 'spec_helper'
 
-describe 'Profile > Applications', feature: true do
+describe 'Profile > Applications' do
   let(:user) { create(:user) }
 
   before do
-    login_as(user)
+    sign_in(user)
   end
 
-  describe 'User manages applications', js: true do
+  describe 'User manages applications', :js do
     it 'deletes an application' do
       create(:oauth_application, owner: user)
       visit oauth_applications_path

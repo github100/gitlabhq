@@ -1,7 +1,7 @@
 require 'spec_helper'
 
-describe Issues::ReopenService, services: true do
-  let(:project) { create(:empty_project) }
+describe Issues::ReopenService do
+  let(:project) { create(:project) }
   let(:issue) { create(:issue, :closed, project: project) }
 
   describe '#execute' do
@@ -25,6 +25,20 @@ describe Issues::ReopenService, services: true do
 
       before do
         project.team << [user, :master]
+      end
+
+      it 'invalidates counter cache for assignees' do
+        issue.assignees << user
+        expect_any_instance_of(User).to receive(:invalidate_issue_cache_counts)
+
+        described_class.new(project, user).execute(issue)
+      end
+
+      it 'refreshes the number of opened issues' do
+        service = described_class.new(project, user)
+
+        expect { service.execute(issue) }
+          .to change { project.open_issues_count }.from(0).to(1)
       end
 
       context 'when issue is not confidential' do

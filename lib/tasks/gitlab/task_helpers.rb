@@ -5,6 +5,8 @@ module Gitlab
   TaskAbortedByUserError = Class.new(StandardError)
 
   module TaskHelpers
+    extend self
+
     # Ask if the user wants to continue
     #
     # Returns "yes" the user chose to continue
@@ -19,23 +21,20 @@ module Gitlab
     # It will primarily use lsb_relase to determine the OS.
     # It has fallbacks to Debian, SuSE, OS X and systems running systemd.
     def os_name
-      os_name = run_command(%W(lsb_release -irs))
-      os_name ||= if File.readable?('/etc/system-release')
-        File.read('/etc/system-release')
-      end
-      os_name ||= if File.readable?('/etc/debian_version')
-        debian_version = File.read('/etc/debian_version')
-        "Debian #{debian_version}"
-      end
-      os_name ||= if File.readable?('/etc/SuSE-release')
-        File.read('/etc/SuSE-release')
-      end
-      os_name ||= if os_x_version = run_command(%W(sw_vers -productVersion))
-        "Mac OS X #{os_x_version}"
-      end
-      os_name ||= if File.readable?('/etc/os-release')
-        File.read('/etc/os-release').match(/PRETTY_NAME=\"(.+)\"/)[1]
-      end
+      os_name = run_command(%w(lsb_release -irs))
+      os_name ||=
+        if File.readable?('/etc/system-release')
+          File.read('/etc/system-release')
+        elsif File.readable?('/etc/debian_version')
+          "Debian #{File.read('/etc/debian_version')}"
+        elsif File.readable?('/etc/SuSE-release')
+          File.read('/etc/SuSE-release')
+        elsif os_x_version = run_command(%w(sw_vers -productVersion))
+          "Mac OS X #{os_x_version}"
+        elsif File.readable?('/etc/os-release')
+          File.read('/etc/os-release').match(/PRETTY_NAME=\"(.+)\"/)[1]
+        end
+
       os_name.try(:squish!)
     end
 
@@ -84,7 +83,7 @@ module Gitlab
     def run_command!(command)
       output, status = Gitlab::Popen.popen(command)
 
-      raise Gitlab::TaskFailedError unless status.zero?
+      raise Gitlab::TaskFailedError.new(output) unless status.zero?
 
       output
     end
@@ -101,40 +100,36 @@ module Gitlab
       end
     end
 
+    def gitlab_user
+      Gitlab.config.gitlab.user
+    end
+
+    def gitlab_user?
+      return @is_gitlab_user unless @is_gitlab_user.nil?
+
+      current_user = run_command(%w(whoami)).chomp
+      @is_gitlab_user = current_user == gitlab_user
+    end
+
     def warn_user_is_not_gitlab
-      unless @warned_user_not_gitlab
-        gitlab_user = Gitlab.config.gitlab.user
-        current_user = run_command(%W(whoami)).chomp
-        unless current_user == gitlab_user
-          puts " Warning ".color(:black).background(:yellow)
-          puts "  You are running as user #{current_user.color(:magenta)}, we hope you know what you are doing."
-          puts "  Things may work\/fail for the wrong reasons."
-          puts "  For correct results you should run this as user #{gitlab_user.color(:magenta)}."
-          puts ""
-        end
+      return if @warned_user_not_gitlab
+
+      unless gitlab_user?
+        current_user = run_command(%w(whoami)).chomp
+
+        puts " Warning ".color(:black).background(:yellow)
+        puts "  You are running as user #{current_user.color(:magenta)}, we hope you know what you are doing."
+        puts "  Things may work\/fail for the wrong reasons."
+        puts "  For correct results you should run this as user #{gitlab_user.color(:magenta)}."
+        puts ""
+
         @warned_user_not_gitlab = true
       end
     end
 
-    # Tries to configure git itself
-    #
-    # Returns true if all subcommands were successfull (according to their exit code)
-    # Returns false if any or all subcommands failed.
-    def auto_fix_git_config(options)
-      if !@warned_user_not_gitlab
-        command_success = options.map do |name, value|
-          system(*%W(#{Gitlab.config.git.bin_path} config --global #{name} #{value}))
-        end
-
-        command_success.all?
-      else
-        false
-      end
-    end
-
     def all_repos
-      Gitlab.config.repositories.storages.each do |name, path|
-        IO.popen(%W(find #{path} -mindepth 2 -maxdepth 2 -type d -name *.git)) do |find|
+      Gitlab.config.repositories.storages.each_value do |repository_storage|
+        IO.popen(%W(find #{repository_storage['path']} -mindepth 2 -maxdepth 2 -type d -name *.git)) do |find|
           find.each_line do |path|
             yield path.chomp
           end
@@ -143,48 +138,32 @@ module Gitlab
     end
 
     def repository_storage_paths_args
-      Gitlab.config.repositories.storages.values
+      Gitlab.config.repositories.storages.values.map { |rs| rs['path'] }
     end
 
     def user_home
       Rails.env.test? ? Rails.root.join('tmp/tests') : Gitlab.config.gitlab.user_home
     end
 
-    def checkout_or_clone_tag(tag:, repo:, target_dir:)
-      if Dir.exist?(target_dir)
-        checkout_tag(tag, target_dir)
-      else
-        clone_repo(repo, target_dir)
-      end
+    def checkout_or_clone_version(version:, repo:, target_dir:)
+      version =
+        if version.starts_with?("=")
+          version.sub(/\A=/, '') # tag or branch
+        else
+          "v#{version}" # tag
+        end
 
-      reset_to_tag(tag, target_dir)
+      clone_repo(repo, target_dir) unless Dir.exist?(target_dir)
+      checkout_version(version, target_dir)
     end
 
     def clone_repo(repo, target_dir)
       run_command!(%W[#{Gitlab.config.git.bin_path} clone -- #{repo} #{target_dir}])
     end
 
-    def checkout_tag(tag, target_dir)
-      run_command!(%W[#{Gitlab.config.git.bin_path} -C #{target_dir} fetch --tags --quiet])
-      run_command!(%W[#{Gitlab.config.git.bin_path} -C #{target_dir} checkout --quiet #{tag}])
-    end
-
-    def reset_to_tag(tag_wanted, target_dir)
-      tag =
-      begin
-        # First try to checkout without fetching
-        # to avoid stalling tests if the Internet is down.
-        run_command!(%W[#{Gitlab.config.git.bin_path} -C #{target_dir} describe -- #{tag_wanted}])
-      rescue Gitlab::TaskFailedError
-        run_command!(%W[#{Gitlab.config.git.bin_path} -C #{target_dir} fetch origin])
-        run_command!(%W[#{Gitlab.config.git.bin_path} -C #{target_dir} describe -- origin/#{tag_wanted}])
-      end
-
-      if tag
-        run_command!(%W[#{Gitlab.config.git.bin_path} -C #{target_dir} reset --hard #{tag.strip}])
-      else
-        raise Gitlab::TaskFailedError
-      end
+    def checkout_version(version, target_dir)
+      run_command!(%W[#{Gitlab.config.git.bin_path} -C #{target_dir} fetch --quiet origin #{version}])
+      run_command!(%W[#{Gitlab.config.git.bin_path} -C #{target_dir} checkout -f --quiet FETCH_HEAD --])
     end
   end
 end

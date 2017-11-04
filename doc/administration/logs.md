@@ -1,4 +1,4 @@
-## Log system
+# Log system
 
 GitLab has an advanced log system where everything is logged so that you
 can analyze your instance using various system log files. In addition to
@@ -9,10 +9,36 @@ documentation](http://docs.gitlab.com/ee/administration/audit_events.html)
 System log files are typically plain text in a standard log file format.
 This guide talks about how to read and use these system log files.
 
-### production.log
+## `production_json.log`
+
+This file lives in `/var/log/gitlab/gitlab-rails/production_json.log` for
+Omnibus GitLab packages or in `/home/git/gitlab/log/production_json.log` for
+installations from source. (When Gitlab is running in an environment
+other than production, the corresponding logfile is shown here.)
+
+It contains a structured log for Rails controller requests received from
+GitLab, thanks to [Lograge](https://github.com/roidrage/lograge/). Note that
+requests from the API are logged to a separate file in `api_json.log`.
+
+Each line contains a JSON line that can be ingested by Elasticsearch, Splunk, etc. For example:
+
+```json
+{"method":"GET","path":"/gitlab/gitlab-ce/issues/1234","format":"html","controller":"Projects::IssuesController","action":"show","status":200,"duration":229.03,"view":174.07,"db":13.24,"time":"2017-08-08T20:15:54.821Z","params":{"namespace_id":"gitlab","project_id":"gitlab-ce","id":"1234"},"remote_ip":"18.245.0.1","user_id":1,"username":"admin"}
+```
+
+In this example, you can see this was a GET request for a specific issue. Notice each line also contains performance data:
+
+1. `duration`: the total time taken to retrieve the request
+2. `view`: total time taken inside the Rails views
+3. `db`: total time to retrieve data from the database
+
+In addition, the log contains the IP address from which the request originated
+(`remote_ip`) as well as the user's ID (`user_id`), and username (`username`).
+
+## `production.log`
 
 This file lives in `/var/log/gitlab/gitlab-rails/production.log` for
-omnibus package or in `/home/git/gitlab/log/production.log` for
+Omnibus GitLab packages or in `/home/git/gitlab/log/production.log` for
 installations from source. (When Gitlab is running in an environment
 other than production, the corresponding logfile is shown here.)
 
@@ -46,10 +72,31 @@ In this example we can see that server processed an HTTP request with URL
 19:34:53 +0200. Also we can see that request was processed by
 `Projects::TreeController`.
 
-### application.log
+## `api_json.log`
+
+Introduced in GitLab 10.0, this file lives in
+`/var/log/gitlab/gitlab-rails/api_json.log` for Omnibus GitLab packages or in
+`/home/git/gitlab/log/api_json.log` for installations from source.
+
+It helps you see requests made directly to the API. For example:
+
+```json
+{"time":"2017-10-10T12:30:11.579Z","severity":"INFO","duration":16.84,"db":1.57,"view":15.27,"status":200,"method":"POST","path":"/api/v4/internal/allowed","params":{"action":"git-upload-pack","changes":"_any","gl_repository":null,"project":"root/foobar.git","protocol":"ssh","env":"{}","key_id":"[FILTERED]","secret_token":"[FILTERED]"},"host":"127.0.0.1","ip":"127.0.0.1","ua":"Ruby"}
+```
+
+This entry above shows an access to an internal endpoint to check whether an
+associated SSH key can download the project in question via a `git fetch` or
+`git clone`. In this example, we see:
+
+1. `method`: The HTTP method used to make the request
+1. `path`: The relative path of the query
+1. `params`: Key-value pairs passed in a query string or HTTP body. Sensitive parameters (e.g. passwords, tokens, etc.) are filtered out.
+1. `ua`: The User-Agent of the requester
+
+## `application.log`
 
 This file lives in `/var/log/gitlab/gitlab-rails/application.log` for
-omnibus package or in `/home/git/gitlab/log/application.log` for
+Omnibus GitLab packages or in `/home/git/gitlab/log/application.log` for
 installations from source.
 
 It helps you discover events happening in your instance such as user creation,
@@ -63,10 +110,10 @@ October 07, 2014 11:25: User "Claudie Hodkiewicz" (nasir_stehr@olson.co.uk)  was
 October 07, 2014 11:25: Project "project133" was removed
 ```
 
-### githost.log
+## `githost.log`
 
 This file lives in `/var/log/gitlab/gitlab-rails/githost.log` for
-omnibus package or in `/home/git/gitlab/log/githost.log` for
+Omnibus GitLab packages or in `/home/git/gitlab/log/githost.log` for
 installations from source.
 
 GitLab has to interact with Git repositories but in some rare cases
@@ -81,10 +128,10 @@ December 03, 2014 13:20 -> ERROR -> Command failed [1]: /usr/bin/git --git-dir=/
 error: failed to push some refs to '/Users/vsizov/gitlab-development-kit/repositories/gitlabhq/gitlab_git.git'
 ```
 
-### sidekiq.log
+## `sidekiq.log`
 
 This file lives in `/var/log/gitlab/gitlab-rails/sidekiq.log` for
-omnibus package or in `/home/git/gitlab/log/sidekiq.log` for
+Omnibus GitLab packages or in `/home/git/gitlab/log/sidekiq.log` for
 installations from source.
 
 GitLab uses background jobs for processing tasks which can take a long
@@ -96,10 +143,10 @@ this file. For example:
 2014-06-10T18:18:26Z 14299 TID-55uqo INFO: Booting Sidekiq 3.0.0 with redis options {:url=>"redis://localhost:6379/0", :namespace=>"sidekiq"}
 ```
 
-### gitlab-shell.log
+## `gitlab-shell.log`
 
 This file lives in `/var/log/gitlab/gitlab-shell/gitlab-shell.log` for
-omnibus package or in `/home/git/gitlab-shell/gitlab-shell.log` for
+Omnibus GitLab packages or in `/home/git/gitlab-shell/gitlab-shell.log` for
 installations from source.
 
 GitLab shell is used by Gitlab for executing Git commands and provide
@@ -110,10 +157,10 @@ I, [2015-02-13T06:17:00.671315 #9291]  INFO -- : Adding project root/example.git
 I, [2015-02-13T06:17:00.679433 #9291]  INFO -- : Moving existing hooks directory and symlinking global hooks directory for /var/opt/gitlab/git-data/repositories/root/example.git.
 ```
 
-### unicorn\_stderr.log
+## `unicorn\_stderr.log`
 
 This file lives in `/var/log/gitlab/unicorn/unicorn_stderr.log` for
-omnibus package or in `/home/git/gitlab/log/unicorn_stderr.log` for
+Omnibus GitLab packages or in `/home/git/gitlab/log/unicorn_stderr.log` for
 installations from source.
 
 Unicorn is a high-performance forking Web server which is used for
@@ -136,3 +183,13 @@ I, [2015-02-13T07:16:01.530733 #9047]  INFO -- : reaped #<Process::Status: pid 9
 I, [2015-02-13T07:16:01.534501 #13379]  INFO -- : worker=1 spawned pid=13379
 I, [2015-02-13T07:16:01.534848 #13379]  INFO -- : worker=1 ready
 ```
+
+## `repocheck.log`
+
+This file lives in `/var/log/gitlab/gitlab-rails/repocheck.log` for
+Omnibus GitLab packages or in `/home/git/gitlab/log/repocheck.log` for
+installations from source.
+
+It logs information whenever a [repository check is run][repocheck] on a project.
+
+[repocheck]: repository_checks.md

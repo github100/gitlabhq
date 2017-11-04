@@ -6,7 +6,7 @@ module Gitlab
     module Build
       module Artifacts
         class Metadata
-          class ParserError < StandardError; end
+          ParserError = Class.new(StandardError)
 
           VERSION_PATTERN = /^[\w\s]+(\d+\.\d+\.\d+)/
           INVALID_PATH_PATTERN = %r{(^\.?\.?/)|(/\.?\.?/)}
@@ -60,7 +60,7 @@ module Gitlab
               begin
                 path = read_string(gz).force_encoding('UTF-8')
                 meta = read_string(gz).force_encoding('UTF-8')
-               
+
                 next unless path.valid_encoding? && meta.valid_encoding?
                 next unless path =~ match_pattern
                 next if path =~ INVALID_PATH_PATTERN

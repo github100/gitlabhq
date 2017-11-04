@@ -1,10 +1,15 @@
+---
+comments: false
+---
+
 # Rake tasks
 
 - [Backup restore](backup_restore.md)
 - [Check](check.md)
 - [Cleanup](cleanup.md)
 - [Features](features.md)
-- [Maintenance](maintenance.md) and self-checks
+- [LDAP Maintenance](../administration/raketasks/ldap.md)
+- [General Maintenance](maintenance.md) and self-checks
 - [User management](user_management.md)
 - [Webhooks](web_hooks.md)
 - [Import](import.md) of git repositories in bulk

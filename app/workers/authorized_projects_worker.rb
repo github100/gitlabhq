@@ -2,33 +2,47 @@ class AuthorizedProjectsWorker
   include Sidekiq::Worker
   include DedicatedSidekiqQueue
 
-  LEASE_TIMEOUT = 1.minute.to_i
+  # Schedules multiple jobs and waits for them to be completed.
+  def self.bulk_perform_and_wait(args_list)
+    # Short-circuit: it's more efficient to do small numbers of jobs inline
+    return bulk_perform_inline(args_list) if args_list.size <= 3
 
-  def self.bulk_perform_async(args_list)
-    Sidekiq::Client.push_bulk('class' => self, 'args' => args_list)
+    waiter = Gitlab::JobWaiter.new(args_list.size)
+
+    # Point all the bulk jobs at the same JobWaiter. Converts, [[1], [2], [3]]
+    # into [[1, "key"], [2, "key"], [3, "key"]]
+    waiting_args_list = args_list.map { |args| [*args, waiter.key] }
+    bulk_perform_async(waiting_args_list)
+
+    waiter.wait
   end
 
-  def perform(user_id)
+  # Schedules multiple jobs to run in sidekiq without waiting for completion
+  def self.bulk_perform_async(args_list)
+    Sidekiq::Client.push_bulk('class' => self, 'queue' => sidekiq_options['queue'], 'args' => args_list)
+  end
+
+  # Performs multiple jobs directly. Failed jobs will be put into sidekiq so
+  # they can benefit from retries
+  def self.bulk_perform_inline(args_list)
+    failed = []
+
+    args_list.each do |args|
+      begin
+        new.perform(*args)
+      rescue
+        failed << args
+      end
+    end
+
+    bulk_perform_async(failed) if failed.present?
+  end
+
+  def perform(user_id, notify_key = nil)
     user = User.find_by(id: user_id)
 
-    refresh(user) if user
-  end
-
-  def refresh(user)
-    lease_key = "refresh_authorized_projects:#{user.id}"
-    lease = Gitlab::ExclusiveLease.new(lease_key, timeout: LEASE_TIMEOUT)
-
-    until uuid = lease.try_obtain
-      # Keep trying until we obtain the lease. If we don't do so we may end up
-      # not updating the list of authorized projects properly. To prevent
-      # hammering Redis too much we'll wait for a bit between retries.
-      sleep(1)
-    end
-
-    begin
-      user.refresh_authorized_projects
-    ensure
-      Gitlab::ExclusiveLease.cancel(lease_key, uuid)
-    end
+    user&.refresh_authorized_projects
+  ensure
+    Gitlab::JobWaiter.notify(notify_key, jid) if notify_key
   end
 end

@@ -1,17 +1,18 @@
-/* eslint-disable func-names, space-before-function-paren, no-var, space-before-blocks, prefer-rest-params, wrap-iife, quotes, consistent-return, one-var, one-var-declaration-per-line, no-cond-assign, max-len, no-undef, object-shorthand, no-param-reassign, comma-dangle, no-plusplus, prefer-template, no-unused-vars, no-return-assign, padded-blocks, max-len */
-(function() {
-  var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+/* eslint-disable func-names, space-before-function-paren, no-var, prefer-rest-params, wrap-iife, quotes, consistent-return, one-var, one-var-declaration-per-line, no-cond-assign, max-len, object-shorthand, no-param-reassign, comma-dangle, prefer-template, no-unused-vars, no-return-assign */
 
+import fuzzaldrinPlus from 'fuzzaldrin-plus';
+
+(function() {
   this.ProjectFindFile = (function() {
     var highlighter;
 
     function ProjectFindFile(element1, options) {
       this.element = element1;
       this.options = options;
-      this.goToBlob = bind(this.goToBlob, this);
-      this.goToTree = bind(this.goToTree, this);
-      this.selectRowDown = bind(this.selectRowDown, this);
-      this.selectRowUp = bind(this.selectRowUp, this);
+      this.goToBlob = this.goToBlob.bind(this);
+      this.goToTree = this.goToTree.bind(this);
+      this.selectRowDown = this.selectRowDown.bind(this);
+      this.selectRowUp = this.selectRowUp.bind(this);
       this.filePaths = {};
       this.inputElement = this.element.find(".file-finder-input");
       // init event
@@ -69,7 +70,7 @@
       var blobItemUrl, filePath, html, i, j, len, matches, results;
       this.element.find(".tree-table > tbody").empty();
       results = [];
-      for (i = j = 0, len = filePaths.length; j < len; i = ++j) {
+      for (i = j = 0, len = filePaths.length; j < len; i = (j += 1)) {
         filePath = filePaths[i];
         if (i === 20) {
           break;
@@ -90,7 +91,7 @@
       lastIndex = 0;
       highlightText = "";
       matchedChars = [];
-      for (j = 0, len = matches.length; j < len; j++) {
+      for (j = 0, len = matches.length; j < len; j += 1) {
         matchIndex = matches[j];
         unmatched = text.substring(lastIndex, matchIndex);
         if (unmatched) {
@@ -165,7 +166,5 @@
     };
 
     return ProjectFindFile;
-
   })();
-
-}).call(this);
+}).call(window);

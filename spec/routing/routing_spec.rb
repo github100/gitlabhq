@@ -135,7 +135,6 @@ end
 #             profile_history GET    /profile/history(.:format)             profile#history
 #            profile_password PUT    /profile/password(.:format)            profile#password_update
 #               profile_token GET    /profile/token(.:format)               profile#token
-# profile_reset_private_token PUT    /profile/reset_private_token(.:format) profile#reset_private_token
 #                     profile GET    /profile(.:format)                     profile#show
 #              profile_update PUT    /profile/update(.:format)              profile#update
 describe ProfilesController, "routing" do
@@ -147,8 +146,8 @@ describe ProfilesController, "routing" do
     expect(get("/profile/audit_log")).to route_to('profiles#audit_log')
   end
 
-  it "to #reset_private_token" do
-    expect(put("/profile/reset_private_token")).to route_to('profiles#reset_private_token')
+  it "to #reset_rss_token" do
+    expect(put("/profile/reset_rss_token")).to route_to('profiles#reset_rss_token')
   end
 
   it "to #show" do
@@ -249,30 +248,47 @@ describe RootController, 'routing' do
   end
 end
 
-#        new_user_session GET    /users/sign_in(.:format)               devise/sessions#new
-#            user_session POST   /users/sign_in(.:format)               devise/sessions#create
-#    destroy_user_session DELETE /users/sign_out(.:format)              devise/sessions#destroy
-# user_omniauth_authorize        /users/auth/:provider(.:format)        omniauth_callbacks#passthru
-#  user_omniauth_callback        /users/auth/:action/callback(.:format) omniauth_callbacks#(?-mix:(?!))
-#           user_password POST   /users/password(.:format)              devise/passwords#create
-#       new_user_password GET    /users/password/new(.:format)          devise/passwords#new
-#      edit_user_password GET    /users/password/edit(.:format)         devise/passwords#edit
-#                         PUT    /users/password(.:format)              devise/passwords#update
 describe "Authentication", "routing" do
-  # pending
+  it "GET /users/sign_in" do
+    expect(get("/users/sign_in")).to route_to('sessions#new')
+  end
+
+  it "POST /users/sign_in" do
+    expect(post("/users/sign_in")).to route_to('sessions#create')
+  end
+
+  it "DELETE /users/sign_out" do
+    expect(delete("/users/sign_out")).to route_to('sessions#destroy')
+  end
+
+  it "POST /users/password" do
+    expect(post("/users/password")).to route_to('passwords#create')
+  end
+
+  it "GET /users/password/new" do
+    expect(get("/users/password/new")).to route_to('passwords#new')
+  end
+
+  it "GET /users/password/edit" do
+    expect(get("/users/password/edit")).to route_to('passwords#edit')
+  end
+
+  it "PUT /users/password" do
+    expect(put("/users/password")).to route_to('passwords#update')
+  end
 end
 
 describe "Groups", "routing" do
   let(:name) { 'complex.group-namegit' }
-
-  before { allow_any_instance_of(GroupUrlConstrainer).to receive(:matches?).and_return(true) }
+  let!(:group) { create(:group, name: name) }
 
   it "to #show" do
     expect(get("/groups/#{name}")).to route_to('groups#show', id: name)
   end
 
   it "also supports nested groups" do
-    expect(get("/#{name}/#{name}")).to route_to('groups#show', id: "#{name}/#{name}")
+    nested_group = create(:group, parent: group)
+    expect(get("/#{name}/#{nested_group.name}")).to route_to('groups#show', id: "#{name}/#{nested_group.name}")
   end
 
   it "also display group#show on the short path" do
@@ -289,10 +305,6 @@ describe "Groups", "routing" do
 
   it "to #members" do
     expect(get("/groups/#{name}/group_members")).to route_to('groups/group_members#index', group_id: name)
-  end
-
-  it "also display group#show with slash in the path" do
-    expect(get('/group/subgroup')).to route_to('groups#show', id: 'group/subgroup')
   end
 end
 

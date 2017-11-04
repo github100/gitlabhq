@@ -1,10 +1,88 @@
 .tree-holder {
-  > .nav-block {
-    margin: 11px 0;
+  @include new-style-dropdown;
+
+  .nav-block {
+    margin: 10px 0;
+
+    @media (min-width: $screen-sm-min) {
+      display: flex;
+
+      .tree-ref-container {
+        flex: 1;
+      }
+
+      .tree-controls {
+        text-align: right;
+
+        .btn-group {
+          margin-left: 10px;
+        }
+
+        .control {
+          float: left;
+          margin-left: 10px;
+        }
+      }
+
+      .tree-ref-holder {
+        float: left;
+        margin-right: 15px;
+      }
+
+      .tree-ref-target-holder {
+        display: inline-block;
+      }
+
+      .repo-breadcrumb {
+        li:last-of-type {
+          position: relative;
+        }
+      }
+
+      .add-to-tree-dropdown {
+        position: absolute;
+        left: 18px;
+      }
+    }
+  }
+
+  @media (max-width: $screen-xs-max) {
+    .repo-breadcrumb {
+      margin-top: 10px;
+      position: relative;
+
+      .dropdown-menu {
+        min-width: 100%;
+        width: 100%;
+        left: inherit;
+        right: 0;
+      }
+    }
+
+    .add-to-tree-dropdown {
+      position: absolute;
+      left: 0;
+      right: 0;
+    }
+
+    .tree-controls {
+      margin-bottom: 10px;
+
+      .btn,
+      .dropdown,
+      .btn-group {
+        width: 100%;
+      }
+
+      .btn {
+        margin: 10px 0 0;
+      }
+    }
   }
 
   .file-finder {
-    width: 50%;
+    max-width: 500px;
+    width: 100%;
 
     .file-finder-input {
       width: 95%;
@@ -13,15 +91,16 @@
   }
 
   .add-to-tree {
-    vertical-align: top;
+    vertical-align: middle;
+    padding: 6px 10px;
   }
 
   .tree-table {
     margin-bottom: 0;
 
     tr {
-      border-bottom: 1px solid $table-border-gray;
-      border-top: 1px solid $table-border-gray;
+      border-bottom: 1px solid $white-normal;
+      border-top: 1px solid $white-normal;
 
       td,
       th {
@@ -31,6 +110,10 @@
       .last-commit {
         @include str-truncated(506px);
 
+        .fa-angle-right {
+          margin-left: 5px;
+        }
+
         @media (min-width: $screen-md-min) and (max-width: $screen-md-max) {
           @include str-truncated(450px);
         }
@@ -39,7 +122,7 @@
 
       .commit-history-link-spacer {
         margin: 0 10px;
-        color: $table-border-color;
+        color: $white-normal;
       }
 
       &:hover {
@@ -53,7 +136,7 @@
 
       &.selected {
         td {
-          background: $gray-dark;
+          background: $white-normal;
           border-top: 1px solid $border-gray-dark;
           border-bottom: 1px solid $border-gray-dark;
         }
@@ -77,12 +160,20 @@
 
       i,
       a {
-        color: $gl-dark-link-color;
+        color: $gl-text-color;
       }
 
       img {
         position: relative;
         top: -1px;
+      }
+    }
+
+    .tree-item-file-external-link {
+      margin-right: 4px;
+
+      span {
+        text-decoration: inherit;
       }
     }
 
@@ -103,21 +194,21 @@
     padding-right: 8px;
 
     .commit-author-name {
-      color: $gl-gray;
+      color: $gl-text-color;
     }
   }
 
   .tree-time-ago {
     min-width: 135px;
-    color: $gl-gray-light;
+    color: $gl-text-color-secondary;
   }
 
   .tree-commit {
     max-width: 320px;
-    color: $gl-gray-light;
+    color: $gl-text-color-secondary;
 
     .tree-commit-link {
-      color: $gl-gray-light;
+      color: $gl-text-color-secondary;
 
       &:hover {
         text-decoration: underline;
@@ -126,34 +217,20 @@
   }
 }
 
-.tree-ref-holder {
-  float: left;
-  margin-right: 15px;
-}
-
 .blob-commit-info {
   list-style: none;
-  padding: $gl-padding;
-  background: $background-color;
-  border: 1px solid $border-color;
-  border-bottom: none;
   margin: 0;
-
-  .commit {
-    padding-top: 0;
-    padding-bottom: 0;
-
-    .commit-row-title {
-      .commit-row-message {
-        font-weight: normal;
-      }
-    }
-  }
+  padding: 0;
 }
 
-#modal-remove-blob > .modal-dialog { width: 850px; }
+.blob-content-holder {
+  margin-top: $gl-padding;
+}
 
 .blob-upload-dropzone-previews {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   text-align: center;
   border: 2px;
   border-style: dashed;
@@ -162,17 +239,32 @@
 }
 
 .upload-link {
-  font-weight: normal;
+  font-weight: $gl-font-weight-normal;
   color: $md-link-color;
 }
 
-.tree-controls {
-  float: right;
-  margin-top: 11px;
-  position: relative;
-  z-index: 2;
+.repo-charts {
+  .sub-header {
+    margin: 20px 0;
+  }
 
-  .download-button {
-    margin-left: $btn-side-margin;
+  .sub-header-block.border-top {
+    margin-top: 20px;
+    padding: 0;
+    border-top: 1px solid $white-dark;
+    border-bottom: none;
+  }
+
+  .commit-stats li {
+    font-size: 16px;
+  }
+
+  .tree-ref-header {
+    margin-bottom: 20px;
+
+    h4 {
+      margin: 0;
+      line-height: 36px;
+    }
   }
 }

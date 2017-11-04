@@ -1,87 +1,57 @@
-/* eslint-disable func-names, space-before-function-paren, no-var, space-before-blocks, prefer-rest-params, wrap-iife, one-var, vars-on-top, one-var-declaration-per-line, comma-dangle, object-shorthand, no-else-return, prefer-template, quotes, no-undef, prefer-arrow-callback, padded-blocks, no-param-reassign, no-cond-assign, max-len */
-(function() {
-  var bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
+/* eslint-disable func-names, space-before-function-paren, no-var, comma-dangle, object-shorthand, no-else-return, prefer-template, quotes, prefer-arrow-callback, max-len */
+import Api from './api';
+import './lib/utils/url_utility';
 
-  this.NamespaceSelect = (function() {
-    function NamespaceSelect(opts) {
-      this.onSelectItem = bind(this.onSelectItem, this);
-      var fieldName, showAny;
-      this.dropdown = opts.dropdown;
-      showAny = true;
-      fieldName = 'namespace_id';
-      if (this.dropdown.attr('data-field-name')) {
-        fieldName = this.dropdown.data('fieldName');
-      }
-      if (this.dropdown.attr('data-show-any')) {
-        showAny = this.dropdown.data('showAny');
-      }
-      this.dropdown.glDropdown({
-        filterable: true,
-        selectable: true,
-        filterRemote: true,
-        search: {
-          fields: ['path']
-        },
-        fieldName: fieldName,
-        toggleLabel: function(selected) {
-          if (selected.id == null) {
-            return selected.text;
-          } else {
-            return selected.kind + ": " + selected.path;
+export default class NamespaceSelect {
+  constructor(opts) {
+    const isFilter = opts.dropdown.dataset.isFilter === 'true';
+    const fieldName = opts.dropdown.dataset.fieldName || 'namespace_id';
+
+    $(opts.dropdown).glDropdown({
+      filterable: true,
+      selectable: true,
+      filterRemote: true,
+      search: {
+        fields: ['path']
+      },
+      fieldName: fieldName,
+      toggleLabel: function(selected) {
+        if (selected.id == null) {
+          return selected.text;
+        } else {
+          return selected.kind + ": " + selected.full_path;
+        }
+      },
+      data: function(term, dataCallback) {
+        return Api.namespaces(term, function(namespaces) {
+          if (isFilter) {
+            const anyNamespace = {
+              text: 'Any namespace',
+              id: null
+            };
+            namespaces.unshift(anyNamespace);
+            namespaces.splice(1, 0, 'divider');
           }
-        },
-        data: function(term, dataCallback) {
-          return Api.namespaces(term, function(namespaces) {
-            var anyNamespace;
-            if (showAny) {
-              anyNamespace = {
-                text: 'Any namespace',
-                id: null
-              };
-              namespaces.unshift(anyNamespace);
-              namespaces.splice(1, 0, 'divider');
-            }
-            return dataCallback(namespaces);
-          });
-        },
-        text: function(namespace) {
-          if (namespace.id == null) {
-            return namespace.text;
-          } else {
-            return namespace.kind + ": " + namespace.path;
-          }
-        },
-        renderRow: this.renderRow,
-        clicked: this.onSelectItem
-      });
-    }
-
-    NamespaceSelect.prototype.onSelectItem = function(item, el, e) {
-      return e.preventDefault();
-    };
-
-    return NamespaceSelect;
-
-  })();
-
-  this.NamespaceSelects = (function() {
-    function NamespaceSelects(opts) {
-      var ref;
-      if (opts == null) {
-        opts = {};
-      }
-      this.$dropdowns = (ref = opts.$dropdowns) != null ? ref : $('.js-namespace-select');
-      this.$dropdowns.each(function(i, dropdown) {
-        var $dropdown;
-        $dropdown = $(dropdown);
-        return new NamespaceSelect({
-          dropdown: $dropdown
+          return dataCallback(namespaces);
         });
-      });
-    }
-
-    return NamespaceSelects;
-
-  })();
-
-}).call(this);
+      },
+      text: function(namespace) {
+        if (namespace.id == null) {
+          return namespace.text;
+        } else {
+          return namespace.kind + ": " + namespace.full_path;
+        }
+      },
+      renderRow: this.renderRow,
+      clicked(options) {
+        if (!isFilter) {
+          const { e } = options;
+          e.preventDefault();
+        }
+      },
+      url(namespace) {
+        return gl.utils.mergeUrlParams({ [fieldName]: namespace.id }, window.location.href);
+      },
+    });
+  }
+}

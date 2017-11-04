@@ -1,6 +1,8 @@
 module Gitlab
   module GithubImport
     class CommentFormatter < BaseFormatter
+      attr_writer :author_id
+
       def attributes
         {
           project: project,
@@ -17,11 +19,11 @@ module Gitlab
       private
 
       def author
-        raw_data.user.login
+        @author ||= UserFormatter.new(client, raw_data.user)
       end
 
       def author_id
-        gitlab_author_id || project.creator_id
+        author.gitlab_id || project.creator_id
       end
 
       def body
@@ -36,7 +38,7 @@ module Gitlab
       end
 
       def generate_line_code(line)
-        Gitlab::Diff::LineCode.generate(file_path, line.new_pos, line.old_pos)
+        Gitlab::Git.diff_line_code(file_path, line.new_pos, line.old_pos)
       end
 
       def on_diff?
@@ -52,10 +54,10 @@ module Gitlab
       end
 
       def note
-        if gitlab_author_id
+        if author.gitlab_id
           body
         else
-          formatter.author_line(author) + body
+          formatter.author_line(author.login) + body
         end
       end
 

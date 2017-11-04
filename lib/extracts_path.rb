@@ -2,7 +2,7 @@
 # file path string when combined in a request parameter
 module ExtractsPath
   # Raised when given an invalid file path
-  class InvalidPathError < StandardError; end
+  InvalidPathError = Class.new(StandardError)
 
   # Given a string containing both a Git tree-ish, such as a branch or tag, and
   # a filesystem path joined by forward slashes, attempts to separate the two.
@@ -42,7 +42,7 @@ module ExtractsPath
 
     return pair unless @project
 
-    if id.match(/^([[:alnum:]]{40})(.+)/)
+    if id =~ /^(\h{40})(.+)/
       # If the ref appears to be a SHA, we're done, just split the string
       pair = $~.captures
     else
@@ -126,8 +126,7 @@ module ExtractsPath
     raise InvalidPathError unless @commit
 
     @hex_path = Digest::SHA1.hexdigest(@path)
-    @logs_path = logs_file_namespace_project_ref_path(@project.namespace,
-                                                      @project, @ref, @path)
+    @logs_path = logs_file_project_ref_path(@project, @ref, @path)
 
   rescue RuntimeError, NoMethodError, InvalidPathError
     render_404

@@ -15,9 +15,10 @@ module Gitlab
         #
         module Configurable
           extend ActiveSupport::Concern
-          include Validatable
 
           included do
+            include Validatable
+
             validations do
               validates :config, type: Hash
             end
@@ -58,7 +59,7 @@ module Gitlab
             def helpers(*nodes)
               nodes.each do |symbol|
                 define_method("#{symbol}_defined?") do
-                  @entries[symbol].specified? if @entries[symbol]
+                  @entries[symbol]&.specified?
                 end
 
                 define_method("#{symbol}_value") do

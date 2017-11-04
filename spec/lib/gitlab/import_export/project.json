@@ -2,6 +2,7 @@
   "description": "Nisi et repellendus ut enim quo accusamus vel magnam.",
   "visibility_level": 10,
   "archived": false,
+  "description_html": "description",
   "labels": [
     {
       "id": 2,
@@ -15,12 +16,34 @@
       "type": "ProjectLabel",
       "priorities": [
       ]
+    },
+    {
+      "id": 3,
+      "title": "test3",
+      "color": "#428bca",
+      "group_id": 8,
+      "created_at": "2016-07-22T08:55:44.161Z",
+      "updated_at": "2016-07-22T08:55:44.161Z",
+      "template": false,
+      "description": "",
+      "project_id": null,
+      "type": "GroupLabel",
+      "priorities": [
+        {
+          "id": 1,
+          "project_id": 5,
+          "label_id": 1,
+          "priority": 1,
+          "created_at": "2016-10-18T09:35:43.338Z",
+          "updated_at": "2016-10-18T09:35:43.338Z"
+        }
+      ]
     }
   ],
   "issues": [
     {
       "id": 40,
-      "title": "Voluptatem amet doloribus deleniti eos maxime repudiandae molestias.",
+      "title": "Voluptatem",
       "assignee_id": 1,
       "author_id": 22,
       "project_id": 5,
@@ -37,6 +60,12 @@
       "due_date": null,
       "moved_to_id": null,
       "test_ee_field": "test",
+      "issue_assignees": [
+        {
+          "user_id": 1,
+          "issue_id": 1
+        }
+      ],
       "milestone": {
         "id": 1,
         "title": "test milestone",
@@ -52,8 +81,6 @@
             "id": 487,
             "target_type": "Milestone",
             "target_id": 1,
-            "title": null,
-            "data": null,
             "project_id": 46,
             "created_at": "2016-06-14T15:02:04.418Z",
             "updated_at": "2016-06-14T15:02:04.418Z",
@@ -341,8 +368,6 @@
             "id": 487,
             "target_type": "Milestone",
             "target_id": 1,
-            "title": null,
-            "data": null,
             "project_id": 46,
             "created_at": "2016-06-14T15:02:04.418Z",
             "updated_at": "2016-06-14T15:02:04.418Z",
@@ -2288,8 +2313,6 @@
           "id": 487,
           "target_type": "Milestone",
           "target_id": 1,
-          "title": null,
-          "data": null,
           "project_id": 46,
           "created_at": "2016-06-14T15:02:04.418Z",
           "updated_at": "2016-06-14T15:02:04.418Z",
@@ -2313,8 +2336,6 @@
           "id": 240,
           "target_type": "Milestone",
           "target_id": 20,
-          "title": null,
-          "data": null,
           "project_id": 36,
           "created_at": "2016-06-14T15:02:04.593Z",
           "updated_at": "2016-06-14T15:02:04.593Z",
@@ -2325,8 +2346,6 @@
           "id": 60,
           "target_type": "Milestone",
           "target_id": 20,
-          "title": null,
-          "data": null,
           "project_id": 5,
           "created_at": "2016-06-14T15:02:04.593Z",
           "updated_at": "2016-06-14T15:02:04.593Z",
@@ -2350,8 +2369,6 @@
           "id": 241,
           "target_type": "Milestone",
           "target_id": 19,
-          "title": null,
-          "data": null,
           "project_id": 36,
           "created_at": "2016-06-14T15:02:04.585Z",
           "updated_at": "2016-06-14T15:02:04.585Z",
@@ -2362,41 +2379,6 @@
           "id": 59,
           "target_type": "Milestone",
           "target_id": 19,
-          "title": null,
-          "data": {
-            "object_kind": "push",
-            "before": "0000000000000000000000000000000000000000",
-            "after": "de990aa15829d0ab182ad5a55b4c527846c0d39c",
-            "ref": "refs/heads/removable-group-owner",
-            "checkout_sha": "de990aa15829d0ab182ad5a55b4c527846c0d39c",
-            "message": null,
-            "user_id": 273486,
-            "user_name": "James Lopez",
-            "user_email": "james@jameslopez.es",
-            "project_id": 562317,
-            "repository": {
-              "name": "GitLab Community Edition",
-              "url": "git@gitlab.com:james11/gitlab-ce.git",
-              "description": "Version Control on your Server. See http://gitlab.org/gitlab-ce/ and the README for more information",
-              "homepage": "https://gitlab.com/james11/gitlab-ce",
-              "git_http_url": "https://gitlab.com/james11/gitlab-ce.git",
-              "git_ssh_url": "git@gitlab.com:james11/gitlab-ce.git",
-              "visibility_level": 20
-            },
-            "commits": [
-              {
-                "id": "de990aa15829d0ab182ad5a55b4c527846c0d39c",
-                "message": "fixed last group owner issue and added test\\n",
-                "timestamp": "2015-10-29T16:10:27+00:00",
-                "url": "https://gitlab.com/james11/gitlab-ce/commit/de990aa15829d0ab182ad5a55b4c527846c0d39c",
-                "author": {
-                  "name": "James Lopez",
-                  "email": "james.lopez@vodafone.com"
-                }
-              }
-            ],
-            "total_commits_count": 1
-          },
           "project_id": 5,
           "created_at": "2016-06-14T15:02:04.585Z",
           "updated_at": "2016-06-14T15:02:04.585Z",
@@ -2499,7 +2481,7 @@
       "id": 27,
       "target_branch": "feature",
       "source_branch": "feature_conflict",
-      "source_project_id": 5,
+      "source_project_id": 999,
       "author_id": 1,
       "assignee_id": null,
       "title": "MR1",
@@ -2511,13 +2493,15 @@
       "iid": 9,
       "description": null,
       "position": 0,
-      "locked_at": null,
       "updated_by_id": null,
       "merge_error": null,
+      "diff_head_sha": "HEAD",
+      "source_branch_sha": "ABCD",
+      "target_branch_sha": "DCBA",
       "merge_params": {
         "force_remove_source_branch": null
       },
-      "merge_when_build_succeeds": false,
+      "merge_when_pipeline_succeeds": true,
       "merge_user_id": null,
       "merge_commit_sha": null,
       "deleted_at": null,
@@ -2718,13 +2702,12 @@
       "merge_request_diff": {
         "id": 27,
         "state": "collected",
-        "st_commits": [
+        "merge_request_diff_commits": [
           {
-            "id": "bb5206fee213d983da88c47f9cf4cc6caf9c66dc",
+            "merge_request_diff_id": 27,
+            "relative_order": 0,
+            "sha": "bb5206fee213d983da88c47f9cf4cc6caf9c66dc",
             "message": "Feature conflcit added\n\nSigned-off-by: Dmitriy Zaporozhets \u003cdmitriy.zaporozhets@gmail.com\u003e\n",
-            "parent_ids": [
-              "5937ac0a7beb003549fc5fd26fc247adbce4a52e"
-            ],
             "authored_date": "2014-08-06T08:35:52.000+02:00",
             "author_name": "Dmitriy Zaporozhets",
             "author_email": "dmitriy.zaporozhets@gmail.com",
@@ -2733,11 +2716,10 @@
             "committer_email": "dmitriy.zaporozhets@gmail.com"
           },
           {
-            "id": "5937ac0a7beb003549fc5fd26fc247adbce4a52e",
+            "merge_request_diff_id": 27,
+            "relative_order": 1,
+            "sha": "5937ac0a7beb003549fc5fd26fc247adbce4a52e",
             "message": "Add submodule from gitlab.com\n\nSigned-off-by: Dmitriy Zaporozhets \u003cdmitriy.zaporozhets@gmail.com\u003e\n",
-            "parent_ids": [
-              "570e7b2abdd848b95f2f578043fc23bd6f6fd24d"
-            ],
             "authored_date": "2014-02-27T10:01:38.000+01:00",
             "author_name": "Dmitriy Zaporozhets",
             "author_email": "dmitriy.zaporozhets@gmail.com",
@@ -2746,11 +2728,10 @@
             "committer_email": "dmitriy.zaporozhets@gmail.com"
           },
           {
-            "id": "570e7b2abdd848b95f2f578043fc23bd6f6fd24d",
+            "merge_request_diff_id": 27,
+            "relative_order": 2,
+            "sha": "570e7b2abdd848b95f2f578043fc23bd6f6fd24d",
             "message": "Change some files\n\nSigned-off-by: Dmitriy Zaporozhets \u003cdmitriy.zaporozhets@gmail.com\u003e\n",
-            "parent_ids": [
-              "6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9"
-            ],
             "authored_date": "2014-02-27T09:57:31.000+01:00",
             "author_name": "Dmitriy Zaporozhets",
             "author_email": "dmitriy.zaporozhets@gmail.com",
@@ -2759,11 +2740,10 @@
             "committer_email": "dmitriy.zaporozhets@gmail.com"
           },
           {
-            "id": "6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9",
+            "merge_request_diff_id": 27,
+            "relative_order": 3,
+            "sha": "6f6d7e7ed97bb5f0054f2b1df789b39ca89b6ff9",
             "message": "More submodules\n\nSigned-off-by: Dmitriy Zaporozhets \u003cdmitriy.zaporozhets@gmail.com\u003e\n",
-            "parent_ids": [
-              "d14d6c0abdd253381df51a723d58691b2ee1ab08"
-            ],
             "authored_date": "2014-02-27T09:54:21.000+01:00",
             "author_name": "Dmitriy Zaporozhets",
             "author_email": "dmitriy.zaporozhets@gmail.com",
@@ -2772,11 +2752,10 @@
             "committer_email": "dmitriy.zaporozhets@gmail.com"
           },
           {
-            "id": "d14d6c0abdd253381df51a723d58691b2ee1ab08",
+            "merge_request_diff_id": 27,
+            "relative_order": 4,
+            "sha": "d14d6c0abdd253381df51a723d58691b2ee1ab08",
             "message": "Remove ds_store files\n\nSigned-off-by: Dmitriy Zaporozhets \u003cdmitriy.zaporozhets@gmail.com\u003e\n",
-            "parent_ids": [
-              "c1acaa58bbcbc3eafe538cb8274ba387047b69f8"
-            ],
             "authored_date": "2014-02-27T09:49:50.000+01:00",
             "author_name": "Dmitriy Zaporozhets",
             "author_email": "dmitriy.zaporozhets@gmail.com",
@@ -2785,11 +2764,10 @@
             "committer_email": "dmitriy.zaporozhets@gmail.com"
           },
           {
-            "id": "c1acaa58bbcbc3eafe538cb8274ba387047b69f8",
+            "merge_request_diff_id": 27,
+            "relative_order": 5,
+            "sha": "c1acaa58bbcbc3eafe538cb8274ba387047b69f8",
             "message": "Ignore DS files\n\nSigned-off-by: Dmitriy Zaporozhets \u003cdmitriy.zaporozhets@gmail.com\u003e\n",
-            "parent_ids": [
-              "ae73cb07c9eeaf35924a10f713b364d32b2dd34f"
-            ],
             "authored_date": "2014-02-27T09:48:32.000+01:00",
             "author_name": "Dmitriy Zaporozhets",
             "author_email": "dmitriy.zaporozhets@gmail.com",
@@ -2798,9 +2776,11 @@
             "committer_email": "dmitriy.zaporozhets@gmail.com"
           }
         ],
-        "utf8_st_diffs": [
+        "merge_request_diff_files": [
           {
-            "diff": "Binary files a/.DS_Store and /dev/null differ\n",
+            "merge_request_diff_id": 27,
+            "relative_order": 0,
+            "utf8_diff": "Binary files a/.DS_Store and /dev/null differ\n",
             "new_path": ".DS_Store",
             "old_path": ".DS_Store",
             "a_mode": "100644",
@@ -2811,7 +2791,9 @@
             "too_large": false
           },
           {
-            "diff": "--- a/.gitignore\n+++ b/.gitignore\n@@ -17,3 +17,4 @@ rerun.txt\n pickle-email-*.html\n .project\n config/initializers/secret_token.rb\n+.DS_Store\n",
+            "merge_request_diff_id": 27,
+            "relative_order": 1,
+            "utf8_diff": "--- a/.gitignore\n+++ b/.gitignore\n@@ -17,3 +17,4 @@ rerun.txt\n pickle-email-*.html\n .project\n config/initializers/secret_token.rb\n+.DS_Store\n",
             "new_path": ".gitignore",
             "old_path": ".gitignore",
             "a_mode": "100644",
@@ -2822,7 +2804,9 @@
             "too_large": false
           },
           {
-            "diff": "--- a/.gitmodules\n+++ b/.gitmodules\n@@ -1,3 +1,9 @@\n [submodule \"six\"]\n \tpath = six\n \turl = git://github.com/randx/six.git\n+[submodule \"gitlab-shell\"]\n+\tpath = gitlab-shell\n+\turl = https://github.com/gitlabhq/gitlab-shell.git\n+[submodule \"gitlab-grack\"]\n+\tpath = gitlab-grack\n+\turl = https://gitlab.com/gitlab-org/gitlab-grack.git\n",
+            "merge_request_diff_id": 27,
+            "relative_order": 2,
+            "utf8_diff": "--- a/.gitmodules\n+++ b/.gitmodules\n@@ -1,3 +1,9 @@\n [submodule \"six\"]\n \tpath = six\n \turl = git://github.com/randx/six.git\n+[submodule \"gitlab-shell\"]\n+\tpath = gitlab-shell\n+\turl = https://github.com/gitlabhq/gitlab-shell.git\n+[submodule \"gitlab-grack\"]\n+\tpath = gitlab-grack\n+\turl = https://gitlab.com/gitlab-org/gitlab-grack.git\n",
             "new_path": ".gitmodules",
             "old_path": ".gitmodules",
             "a_mode": "100644",
@@ -2833,7 +2817,9 @@
             "too_large": false
           },
           {
-            "diff": "Binary files a/files/.DS_Store and /dev/null differ\n",
+            "merge_request_diff_id": 27,
+            "relative_order": 3,
+            "utf8_diff": "Binary files a/files/.DS_Store and /dev/null differ\n",
             "new_path": "files/.DS_Store",
             "old_path": "files/.DS_Store",
             "a_mode": "100644",
@@ -2844,7 +2830,9 @@
             "too_large": false
           },
           {
-            "diff": "--- /dev/null\n+++ b/files/ruby/feature.rb\n@@ -0,0 +1,4 @@\n+# This file was changed in feature branch\n+# We put different code here to make merge conflict\n+class Conflict\n+end\n",
+            "merge_request_diff_id": 27,
+            "relative_order": 4,
+            "utf8_diff": "--- /dev/null\n+++ b/files/ruby/feature.rb\n@@ -0,0 +1,4 @@\n+# This file was changed in feature branch\n+# We put different code here to make merge conflict\n+class Conflict\n+end\n",
             "new_path": "files/ruby/feature.rb",
             "old_path": "files/ruby/feature.rb",
             "a_mode": "0",
@@ -2855,7 +2843,9 @@
             "too_large": false
           },
           {
-            "diff": "--- a/files/ruby/popen.rb\n+++ b/files/ruby/popen.rb\n@@ -6,12 +6,18 @@ module Popen\n \n   def popen(cmd, path=nil)\n     unless cmd.is_a?(Array)\n-      raise \"System commands must be given as an array of strings\"\n+      raise RuntimeError, \"System commands must be given as an array of strings\"\n     end\n \n     path ||= Dir.pwd\n-    vars = { \"PWD\" =\u003e path }\n-    options = { chdir: path }\n+\n+    vars = {\n+      \"PWD\" =\u003e path\n+    }\n+\n+    options = {\n+      chdir: path\n+    }\n \n     unless File.directory?(path)\n       FileUtils.mkdir_p(path)\n@@ -19,6 +25,7 @@ module Popen\n \n     @cmd_output = \"\"\n     @cmd_status = 0\n+\n     Open3.popen3(vars, *cmd, options) do |stdin, stdout, stderr, wait_thr|\n       @cmd_output \u003c\u003c stdout.read\n       @cmd_output \u003c\u003c stderr.read\n",
+            "merge_request_diff_id": 27,
+            "relative_order": 5,
+            "utf8_diff": "--- a/files/ruby/popen.rb\n+++ b/files/ruby/popen.rb\n@@ -6,12 +6,18 @@ module Popen\n \n   def popen(cmd, path=nil)\n     unless cmd.is_a?(Array)\n-      raise \"System commands must be given as an array of strings\"\n+      raise RuntimeError, \"System commands must be given as an array of strings\"\n     end\n \n     path ||= Dir.pwd\n-    vars = { \"PWD\" =\u003e path }\n-    options = { chdir: path }\n+\n+    vars = {\n+      \"PWD\" =\u003e path\n+    }\n+\n+    options = {\n+      chdir: path\n+    }\n \n     unless File.directory?(path)\n       FileUtils.mkdir_p(path)\n@@ -19,6 +25,7 @@ module Popen\n \n     @cmd_output = \"\"\n     @cmd_status = 0\n+\n     Open3.popen3(vars, *cmd, options) do |stdin, stdout, stderr, wait_thr|\n       @cmd_output \u003c\u003c stdout.read\n       @cmd_output \u003c\u003c stderr.read\n",
             "new_path": "files/ruby/popen.rb",
             "old_path": "files/ruby/popen.rb",
             "a_mode": "100644",
@@ -2866,7 +2856,9 @@
             "too_large": false
           },
           {
-            "diff": "--- a/files/ruby/regex.rb\n+++ b/files/ruby/regex.rb\n@@ -19,14 +19,12 @@ module Gitlab\n     end\n \n     def archive_formats_regex\n-      #|zip|tar|    tar.gz    |         tar.bz2         |\n-      /(zip|tar|tar\\.gz|tgz|gz|tar\\.bz2|tbz|tbz2|tb2|bz2)/\n+      /(zip|tar|7z|tar\\.gz|tgz|gz|tar\\.bz2|tbz|tbz2|tb2|bz2)/\n     end\n \n     def git_reference_regex\n       # Valid git ref regex, see:\n       # https://www.kernel.org/pub/software/scm/git/docs/git-check-ref-format.html\n-\n       %r{\n         (?!\n            (?# doesn't begins with)\n",
+            "merge_request_diff_id": 27,
+            "relative_order": 6,
+            "utf8_diff": "--- a/files/ruby/regex.rb\n+++ b/files/ruby/regex.rb\n@@ -19,14 +19,12 @@ module Gitlab\n     end\n \n     def archive_formats_regex\n-      #|zip|tar|    tar.gz    |         tar.bz2         |\n-      /(zip|tar|tar\\.gz|tgz|gz|tar\\.bz2|tbz|tbz2|tb2|bz2)/\n+      /(zip|tar|7z|tar\\.gz|tgz|gz|tar\\.bz2|tbz|tbz2|tb2|bz2)/\n     end\n \n     def git_reference_regex\n       # Valid git ref regex, see:\n       # https://www.kernel.org/pub/software/scm/git/docs/git-check-ref-format.html\n-\n       %r{\n         (?!\n            (?# doesn't begins with)\n",
             "new_path": "files/ruby/regex.rb",
             "old_path": "files/ruby/regex.rb",
             "a_mode": "100644",
@@ -2877,7 +2869,9 @@
             "too_large": false
           },
           {
-            "diff": "--- /dev/null\n+++ b/gitlab-grack\n@@ -0,0 +1 @@\n+Subproject commit 645f6c4c82fd3f5e06f67134450a570b795e55a6\n",
+            "merge_request_diff_id": 27,
+            "relative_order": 7,
+            "utf8_diff": "--- /dev/null\n+++ b/gitlab-grack\n@@ -0,0 +1 @@\n+Subproject commit 645f6c4c82fd3f5e06f67134450a570b795e55a6\n",
             "new_path": "gitlab-grack",
             "old_path": "gitlab-grack",
             "a_mode": "0",
@@ -2888,7 +2882,9 @@
             "too_large": false
           },
           {
-            "diff": "--- /dev/null\n+++ b/gitlab-shell\n@@ -0,0 +1 @@\n+Subproject commit 79bceae69cb5750d6567b223597999bfa91cb3b9\n",
+            "merge_request_diff_id": 27,
+            "relative_order": 8,
+            "utf8_diff": "--- /dev/null\n+++ b/gitlab-shell\n@@ -0,0 +1 @@\n+Subproject commit 79bceae69cb5750d6567b223597999bfa91cb3b9\n",
             "new_path": "gitlab-shell",
             "old_path": "gitlab-shell",
             "a_mode": "0",
@@ -2910,8 +2906,6 @@
           "id": 221,
           "target_type": "MergeRequest",
           "target_id": 27,
-          "title": null,
-          "data": null,
           "project_id": 36,
           "created_at": "2016-06-14T15:02:36.703Z",
           "updated_at": "2016-06-14T15:02:36.703Z",
@@ -2922,8 +2916,6 @@
           "id": 187,
           "target_type": "MergeRequest",
           "target_id": 27,
-          "title": null,
-          "data": null,
           "project_id": 5,
           "created_at": "2016-06-14T15:02:36.703Z",
           "updated_at": "2016-06-14T15:02:36.703Z",
@@ -2948,13 +2940,12 @@
       "iid": 8,
       "description": null,
       "position": 0,
-      "locked_at": null,
       "updated_by_id": null,
       "merge_error": null,
       "merge_params": {
         "force_remove_source_branch": null
       },
-      "merge_when_build_succeeds": false,
+      "merge_when_pipeline_succeeds": false,
       "merge_user_id": null,
       "merge_commit_sha": null,
       "deleted_at": null,
@@ -3194,8 +3185,6 @@
           "id": 222,
           "target_type": "MergeRequest",
           "target_id": 26,
-          "title": null,
-          "data": null,
           "project_id": 36,
           "created_at": "2016-06-14T15:02:36.496Z",
           "updated_at": "2016-06-14T15:02:36.496Z",
@@ -3206,8 +3195,6 @@
           "id": 186,
           "target_type": "MergeRequest",
           "target_id": 26,
-          "title": null,
-          "data": null,
           "project_id": 5,
           "created_at": "2016-06-14T15:02:36.496Z",
           "updated_at": "2016-06-14T15:02:36.496Z",
@@ -3232,13 +3219,12 @@
       "iid": 7,
       "description": "Et commodi deserunt aspernatur vero rerum. Ut non dolorum alias in odit est libero. Voluptatibus eos in et vitae repudiandae facilis ex mollitia.",
       "position": 0,
-      "locked_at": null,
       "updated_by_id": null,
       "merge_error": null,
       "merge_params": {
         "force_remove_source_branch": null
       },
-      "merge_when_build_succeeds": false,
+      "merge_when_pipeline_succeeds": false,
       "merge_user_id": null,
       "merge_commit_sha": null,
       "deleted_at": null,
@@ -3478,8 +3464,6 @@
           "id": 223,
           "target_type": "MergeRequest",
           "target_id": 15,
-          "title": null,
-          "data": null,
           "project_id": 36,
           "created_at": "2016-06-14T15:02:25.262Z",
           "updated_at": "2016-06-14T15:02:25.262Z",
@@ -3490,8 +3474,6 @@
           "id": 175,
           "target_type": "MergeRequest",
           "target_id": 15,
-          "title": null,
-          "data": null,
           "project_id": 5,
           "created_at": "2016-06-14T15:02:25.262Z",
           "updated_at": "2016-06-14T15:02:25.262Z",
@@ -3516,13 +3498,12 @@
       "iid": 6,
       "description": "Dicta magnam non voluptates nam dignissimos nostrum deserunt. Dolorum et suscipit iure quae doloremque. Necessitatibus saepe aut labore sed.",
       "position": 0,
-      "locked_at": null,
       "updated_by_id": null,
       "merge_error": null,
       "merge_params": {
         "force_remove_source_branch": null
       },
-      "merge_when_build_succeeds": false,
+      "merge_when_pipeline_succeeds": false,
       "merge_user_id": null,
       "merge_commit_sha": null,
       "deleted_at": null,
@@ -4168,8 +4149,6 @@
           "id": 224,
           "target_type": "MergeRequest",
           "target_id": 14,
-          "title": null,
-          "data": null,
           "project_id": 36,
           "created_at": "2016-06-14T15:02:25.113Z",
           "updated_at": "2016-06-14T15:02:25.113Z",
@@ -4180,8 +4159,6 @@
           "id": 174,
           "target_type": "MergeRequest",
           "target_id": 14,
-          "title": null,
-          "data": null,
           "project_id": 5,
           "created_at": "2016-06-14T15:02:25.113Z",
           "updated_at": "2016-06-14T15:02:25.113Z",
@@ -4206,13 +4183,12 @@
       "iid": 5,
       "description": "Est eaque quasi qui qui. Similique voluptatem impedit iusto ratione reprehenderit. Itaque est illum ut nulla aut.",
       "position": 0,
-      "locked_at": null,
       "updated_by_id": null,
       "merge_error": null,
       "merge_params": {
         "force_remove_source_branch": null
       },
-      "merge_when_build_succeeds": false,
+      "merge_when_pipeline_succeeds": false,
       "merge_user_id": null,
       "merge_commit_sha": null,
       "deleted_at": null,
@@ -4241,9 +4217,7 @@
             {
               "id": 529,
               "target_type": "Note",
-              "target_id": 2521,
-              "title": "test levels",
-              "data": null,
+              "target_id": 793,
               "project_id": 4,
               "created_at": "2016-07-07T14:35:12.128Z",
               "updated_at": "2016-07-07T14:35:12.128Z",
@@ -4716,8 +4690,6 @@
           "id": 225,
           "target_type": "MergeRequest",
           "target_id": 13,
-          "title": null,
-          "data": null,
           "project_id": 36,
           "created_at": "2016-06-14T15:02:24.636Z",
           "updated_at": "2016-06-14T15:02:24.636Z",
@@ -4728,8 +4700,6 @@
           "id": 173,
           "target_type": "MergeRequest",
           "target_id": 13,
-          "title": null,
-          "data": null,
           "project_id": 5,
           "created_at": "2016-06-14T15:02:24.636Z",
           "updated_at": "2016-06-14T15:02:24.636Z",
@@ -4754,13 +4724,12 @@
       "iid": 4,
       "description": "Nam magnam odit velit rerum. Sapiente dolore sunt saepe debitis. Culpa maiores ut ad dolores dolorem et.",
       "position": 0,
-      "locked_at": null,
       "updated_by_id": null,
       "merge_error": null,
       "merge_params": {
         "force_remove_source_branch": null
       },
-      "merge_when_build_succeeds": false,
+      "merge_when_pipeline_succeeds": false,
       "merge_user_id": null,
       "merge_commit_sha": null,
       "deleted_at": null,
@@ -5215,8 +5184,6 @@
           "id": 226,
           "target_type": "MergeRequest",
           "target_id": 12,
-          "title": null,
-          "data": null,
           "project_id": 36,
           "created_at": "2016-06-14T15:02:24.253Z",
           "updated_at": "2016-06-14T15:02:24.253Z",
@@ -5227,8 +5194,6 @@
           "id": 172,
           "target_type": "MergeRequest",
           "target_id": 12,
-          "title": null,
-          "data": null,
           "project_id": 5,
           "created_at": "2016-06-14T15:02:24.253Z",
           "updated_at": "2016-06-14T15:02:24.253Z",
@@ -5253,13 +5218,12 @@
       "iid": 3,
       "description": "Libero nesciunt mollitia quis odit eos vero quasi. Iure voluptatem ut sint pariatur voluptates ut aut. Laborum possimus unde illum ipsum eum.",
       "position": 0,
-      "locked_at": null,
       "updated_by_id": null,
       "merge_error": null,
       "merge_params": {
         "force_remove_source_branch": null
       },
-      "merge_when_build_succeeds": false,
+      "merge_when_pipeline_succeeds": false,
       "merge_user_id": null,
       "merge_commit_sha": null,
       "deleted_at": null,
@@ -5475,8 +5439,6 @@
           "id": 227,
           "target_type": "MergeRequest",
           "target_id": 11,
-          "title": null,
-          "data": null,
           "project_id": 36,
           "created_at": "2016-06-14T15:02:23.865Z",
           "updated_at": "2016-06-14T15:02:23.865Z",
@@ -5487,8 +5449,6 @@
           "id": 171,
           "target_type": "MergeRequest",
           "target_id": 11,
-          "title": null,
-          "data": null,
           "project_id": 5,
           "created_at": "2016-06-14T15:02:23.865Z",
           "updated_at": "2016-06-14T15:02:23.865Z",
@@ -5513,13 +5473,12 @@
       "iid": 2,
       "description": "Ut dolor quia aliquid dolore et nisi. Est minus suscipit enim quaerat sapiente consequatur rerum. Eveniet provident consequatur dolor accusantium reiciendis.",
       "position": 0,
-      "locked_at": null,
       "updated_by_id": null,
       "merge_error": null,
       "merge_params": {
         "force_remove_source_branch": null
       },
-      "merge_when_build_succeeds": false,
+      "merge_when_pipeline_succeeds": false,
       "merge_user_id": null,
       "merge_commit_sha": null,
       "deleted_at": null,
@@ -6165,8 +6124,6 @@
           "id": 228,
           "target_type": "MergeRequest",
           "target_id": 10,
-          "title": null,
-          "data": null,
           "project_id": 36,
           "created_at": "2016-06-14T15:02:23.660Z",
           "updated_at": "2016-06-14T15:02:23.660Z",
@@ -6177,8 +6134,6 @@
           "id": 170,
           "target_type": "MergeRequest",
           "target_id": 10,
-          "title": null,
-          "data": null,
           "project_id": 5,
           "created_at": "2016-06-14T15:02:23.660Z",
           "updated_at": "2016-06-14T15:02:23.660Z",
@@ -6203,13 +6158,12 @@
       "iid": 1,
       "description": "Eveniet nihil ratione veniam similique qui aut sapiente tempora. Sed praesentium iusto dignissimos possimus id repudiandae quo nihil. Qui doloremque autem et iure fugit.",
       "position": 0,
-      "locked_at": null,
       "updated_by_id": null,
       "merge_error": null,
       "merge_params": {
         "force_remove_source_branch": null
       },
-      "merge_when_build_succeeds": false,
+      "merge_when_pipeline_succeeds": false,
       "merge_user_id": null,
       "merge_commit_sha": null,
       "deleted_at": null,
@@ -6449,8 +6403,6 @@
           "id": 229,
           "target_type": "MergeRequest",
           "target_id": 9,
-          "title": null,
-          "data": null,
           "project_id": 36,
           "created_at": "2016-06-14T15:02:22.927Z",
           "updated_at": "2016-06-14T15:02:22.927Z",
@@ -6461,8 +6413,6 @@
           "id": 169,
           "target_type": "MergeRequest",
           "target_id": 9,
-          "title": null,
-          "data": null,
           "project_id": 5,
           "created_at": "2016-06-14T15:02:22.927Z",
           "updated_at": "2016-06-14T15:02:22.927Z",
@@ -6485,7 +6435,6 @@
       "tag": null,
       "yaml_errors": null,
       "committed_at": null,
-      "gl_project_id": 5,
       "status": "failed",
       "started_at": null,
       "finished_at": null,
@@ -6543,12 +6492,13 @@
           "artifacts_file": {
             "url": null
           },
-          "gl_project_id": 5,
           "artifacts_metadata": {
             "url": null
           },
           "erased_by_id": null,
-          "erased_at": null
+          "erased_at": null,
+          "type": "Ci::Build",
+          "token": "abcd"
         },
         {
           "id": 72,
@@ -6579,7 +6529,6 @@
           "artifacts_file": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/72/p5_build_artifacts.zip"
           },
-          "gl_project_id": 5,
           "artifacts_metadata": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/72/p5_build_artifacts_metadata.gz"
           },
@@ -6600,7 +6549,6 @@
       "tag": null,
       "yaml_errors": null,
       "committed_at": null,
-      "gl_project_id": 5,
       "status": "failed",
       "started_at": null,
       "finished_at": null,
@@ -6635,7 +6583,6 @@
           "artifacts_file": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/74/p5_build_artifacts.zip"
           },
-          "gl_project_id": 5,
           "artifacts_metadata": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/74/p5_build_artifacts_metadata.gz"
           },
@@ -6671,7 +6618,6 @@
           "artifacts_file": {
             "url": null
           },
-          "gl_project_id": 5,
           "artifacts_metadata": {
             "url": null
           },
@@ -6692,7 +6638,6 @@
       "tag": null,
       "yaml_errors": null,
       "committed_at": null,
-      "gl_project_id": 5,
       "status": "failed",
       "started_at": null,
       "finished_at": null,
@@ -6727,7 +6672,6 @@
           "artifacts_file": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/76/p5_build_artifacts.zip"
           },
-          "gl_project_id": 5,
           "artifacts_metadata": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/76/p5_build_artifacts_metadata.gz"
           },
@@ -6763,7 +6707,6 @@
           "artifacts_file": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/75/p5_build_artifacts.zip"
           },
-          "gl_project_id": 5,
           "artifacts_metadata": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/75/p5_build_artifacts_metadata.gz"
           },
@@ -6784,7 +6727,6 @@
       "tag": null,
       "yaml_errors": null,
       "committed_at": null,
-      "gl_project_id": 5,
       "status": "failed",
       "started_at": null,
       "finished_at": null,
@@ -6819,7 +6761,6 @@
           "artifacts_file": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/78/p5_build_artifacts.zip"
           },
-          "gl_project_id": 5,
           "artifacts_metadata": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/78/p5_build_artifacts_metadata.gz"
           },
@@ -6855,7 +6796,6 @@
           "artifacts_file": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/77/p5_build_artifacts.zip"
           },
-          "gl_project_id": 5,
           "artifacts_metadata": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/77/p5_build_artifacts_metadata.gz"
           },
@@ -6876,7 +6816,6 @@
       "tag": null,
       "yaml_errors": null,
       "committed_at": null,
-      "gl_project_id": 5,
       "status": "failed",
       "started_at": null,
       "finished_at": null,
@@ -6911,7 +6850,6 @@
           "artifacts_file": {
             "url": null
           },
-          "gl_project_id": 5,
           "artifacts_metadata": {
             "url": null
           },
@@ -6947,7 +6885,6 @@
           "artifacts_file": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/80/p5_build_artifacts.zip"
           },
-          "gl_project_id": 5,
           "artifacts_metadata": {
             "url": "/Users/Test/Test/gitlab-development-kit/gitlab/shared/artifacts/2016_03/5/80/p5_build_artifacts_metadata.gz"
           },
@@ -6957,38 +6894,20 @@
       ]
     }
   ],
-  "variables": [
-
-  ],
   "triggers": [
-
+    {
+      "id": 123,
+      "token": "cdbfasdf44a5958c83654733449e585",
+      "project_id": 5,
+      "deleted_at": null,
+      "created_at": "2017-01-16T15:25:28.637Z",
+      "updated_at": "2017-01-16T15:25:28.637Z"
+    }
   ],
   "deploy_keys": [
 
   ],
   "services": [
-    {
-      "id": 164,
-      "title": null,
-      "project_id": 5,
-      "created_at": "2016-06-14T15:02:07.372Z",
-      "updated_at": "2016-06-14T15:02:07.372Z",
-      "active": false,
-      "properties": {
-
-      },
-      "template": false,
-      "push_events": true,
-      "issues_events": true,
-      "merge_requests_events": true,
-      "tag_push_events": true,
-      "note_events": true,
-      "build_events": true,
-      "category": "issue_tracker",
-      "type": "CustomIssueTrackerService",
-      "default": true,
-      "wiki_page_events": true
-    },
     {
       "id": 100,
       "title": "JetBrains TeamCity CI",
@@ -7005,7 +6924,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "TeamcityService",
       "category": "ci",
       "default": false,
       "wiki_page_events": true
@@ -7018,7 +6938,7 @@
       "updated_at": "2016-06-14T15:01:51.303Z",
       "active": false,
       "properties": {
-        "notify_only_broken_builds": true
+        "notify_only_broken_pipelines": true
       },
       "template": false,
       "push_events": true,
@@ -7026,7 +6946,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "pipeline_events": true,
+      "type": "SlackService",
       "category": "common",
       "default": false,
       "wiki_page_events": true
@@ -7047,7 +6968,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "RedmineService",
       "category": "issue_tracker",
       "default": false,
       "wiki_page_events": true
@@ -7068,7 +6990,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "PushoverService",
       "category": "common",
       "default": false,
       "wiki_page_events": true
@@ -7089,7 +7012,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "PivotalTrackerService",
       "category": "common",
       "default": false,
       "wiki_page_events": true
@@ -7111,7 +7035,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "JiraService",
       "category": "issue_tracker",
       "default": false,
       "wiki_page_events": true
@@ -7132,7 +7057,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "IrkerService",
       "category": "common",
       "default": false,
       "wiki_page_events": true
@@ -7145,7 +7071,7 @@
       "updated_at": "2016-06-14T15:01:51.219Z",
       "active": false,
       "properties": {
-        "notify_only_broken_builds": true
+        "notify_only_broken_pipelines": true
       },
       "template": false,
       "push_events": true,
@@ -7153,7 +7079,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "pipeline_events": true,
+      "type": "HipchatService",
       "category": "common",
       "default": false,
       "wiki_page_events": true
@@ -7174,7 +7101,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "GemnasiumService",
       "category": "common",
       "default": false,
       "wiki_page_events": true
@@ -7195,7 +7123,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "FlowdockService",
       "category": "common",
       "default": false,
       "wiki_page_events": true
@@ -7216,7 +7145,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "ExternalWikiService",
       "category": "common",
       "default": false,
       "wiki_page_events": true
@@ -7237,7 +7167,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "EmailsOnPushService",
       "category": "common",
       "default": false,
       "wiki_page_events": true
@@ -7258,7 +7189,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "DroneCiService",
       "category": "ci",
       "default": false,
       "wiki_page_events": true
@@ -7279,7 +7211,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "CustomIssueTrackerService",
       "category": "issue_tracker",
       "default": false,
       "wiki_page_events": true
@@ -7300,28 +7233,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
-      "category": "common",
-      "default": false,
-      "wiki_page_events": true
-    },
-    {
-      "id": 85,
-      "title": "Builds emails",
-      "project_id": 5,
-      "created_at": "2016-06-14T15:01:51.090Z",
-      "updated_at": "2016-06-14T15:01:51.090Z",
-      "active": false,
-      "properties": {
-        "notify_only_broken_builds": true
-      },
-      "template": false,
-      "push_events": true,
-      "issues_events": true,
-      "merge_requests_events": true,
-      "tag_push_events": true,
-      "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "CampfireService",
       "category": "common",
       "default": false,
       "wiki_page_events": true
@@ -7342,7 +7255,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "BuildkiteService",
       "category": "ci",
       "default": false,
       "wiki_page_events": true
@@ -7363,7 +7277,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "BambooService",
       "category": "ci",
       "default": false,
       "wiki_page_events": true
@@ -7384,7 +7299,8 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "AssemblaService",
       "category": "common",
       "default": false,
       "wiki_page_events": true
@@ -7405,10 +7321,33 @@
       "merge_requests_events": true,
       "tag_push_events": true,
       "note_events": true,
-      "build_events": true,
+      "job_events": true,
+      "type": "AssemblaService",
       "category": "common",
       "default": false,
       "wiki_page_events": true
+    },
+    {
+      "id": 101,
+      "title": "JenkinsDeprecated",
+      "project_id": 5,
+      "created_at": "2016-06-14T15:01:51.031Z",
+      "updated_at": "2016-06-14T15:01:51.031Z",
+      "active": false,
+      "properties": {
+
+      },
+      "template": false,
+      "push_events": true,
+      "issues_events": true,
+      "merge_requests_events": true,
+      "tag_push_events": true,
+      "note_events": true,
+      "job_events": true,
+      "category": "common",
+      "default": false,
+      "wiki_page_events": true,
+      "type": "JenkinsDeprecatedService"
     }
   ],
   "hooks": [
@@ -7437,6 +7376,24 @@
           "access_level": 40,
           "created_at": "2016-08-30T07:32:52.490Z",
           "updated_at": "2016-08-30T07:32:52.490Z"
+        }
+      ]
+    }
+  ],
+  "protected_tags": [
+    {
+      "id": 1,
+      "project_id": 9,
+      "name": "v*",
+      "created_at": "2017-04-04T13:48:13.426Z",
+      "updated_at": "2017-04-04T13:48:13.426Z",
+      "create_access_levels": [
+        {
+          "id": 1,
+          "protected_tag_id": 1,
+          "access_level": 40,
+          "created_at": "2017-04-04T13:48:13.458Z",
+          "updated_at": "2017-04-04T13:48:13.458Z"
         }
       ]
     }

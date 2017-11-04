@@ -13,6 +13,10 @@ describe AnalyticsBuildEntity do
 
     subject { entity.as_json }
 
+    around do |example|
+      Timecop.freeze { example.run }
+    end
+
     it 'contains the URL' do
       expect(subject).to include(:url)
     end
@@ -39,7 +43,7 @@ describe AnalyticsBuildEntity do
       let(:finished_at) { nil }
 
       it 'does not blow up' do
-        expect{ subject[:date] }.not_to raise_error
+        expect { subject[:date] }.not_to raise_error
       end
 
       it 'shows the right message' do
@@ -55,7 +59,7 @@ describe AnalyticsBuildEntity do
       let(:started_at) { nil }
 
       it 'does not blow up' do
-        expect{ subject[:date] }.not_to raise_error
+        expect { subject[:date] }.not_to raise_error
       end
 
       it 'shows the right message' do
@@ -71,7 +75,7 @@ describe AnalyticsBuildEntity do
       let(:finished_at) { nil }
 
       it 'does not blow up' do
-        expect{ subject[:date] }.not_to raise_error
+        expect { subject[:date] }.not_to raise_error
       end
 
       it 'shows the right message' do

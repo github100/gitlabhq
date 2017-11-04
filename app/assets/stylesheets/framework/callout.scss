@@ -11,16 +11,16 @@
   padding: $gl-padding;
   border-left: 3px solid $border-color;
   color: $text-color;
-  background: $background-color;
-}
+  background: $gray-light;
 
-.bs-callout h4 {
-  margin-top: 0;
-  margin-bottom: 5px;
-}
+  h4 {
+    margin-top: 0;
+    margin-bottom: 5px;
+  }
 
-.bs-callout p:last-child {
-  margin-bottom: 0;
+  p:last-child {
+    margin-bottom: 0;
+  }
 }
 
 /* Variations */

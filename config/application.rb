@@ -6,7 +6,10 @@ Bundler.require(:default, Rails.env)
 
 module Gitlab
   class Application < Rails::Application
-    require_dependency Rails.root.join('lib/gitlab/redis')
+    require_dependency Rails.root.join('lib/gitlab/redis/cache')
+    require_dependency Rails.root.join('lib/gitlab/redis/queues')
+    require_dependency Rails.root.join('lib/gitlab/redis/shared_state')
+    require_dependency Rails.root.join('lib/gitlab/request_context')
 
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
@@ -20,12 +23,14 @@ module Gitlab
     # https://github.com/rails/rails/blob/v4.2.6/railties/lib/rails/engine.rb#L687
     # This is a nice reference article on autoloading/eager loading:
     # http://blog.arkency.com/2014/11/dont-forget-about-eager-load-when-extending-autoload
-    config.eager_load_paths.push(*%W(#{config.root}/lib
-                                     #{config.root}/app/models/ci
+    config.eager_load_paths.push(*%W[#{config.root}/lib
                                      #{config.root}/app/models/hooks
                                      #{config.root}/app/models/members
                                      #{config.root}/app/models/project_services
-                                     #{config.root}/app/workers/concerns))
+                                     #{config.root}/app/workers/concerns
+                                     #{config.root}/app/services/concerns
+                                     #{config.root}/app/serializers/concerns
+                                     #{config.root}/app/finders/concerns])
 
     config.generators.templates.push("#{config.root}/generator_templates")
 
@@ -38,22 +43,26 @@ module Gitlab
     # config.i18n.default_locale = :de
     config.i18n.enforce_available_locales = false
 
+    # Translation for AR attrs is not working well for POROs like WikiPage
+    config.gettext_i18n_rails.use_for_active_record_attributes = false
+
     # Configure the default encoding used in templates for Ruby 1.9.
     config.encoding = "utf-8"
 
     # Configure sensitive parameters which will be filtered from the log file.
     #
     # Parameters filtered:
-    # - Password (:password, :password_confirmation)
-    # - Private tokens (:private_token)
+    # - Any parameter ending with `token`
+    # - Any parameter containing `password`
+    # - Any parameter containing `secret`
     # - Two-factor tokens (:otp_attempt)
     # - Repo/Project Import URLs (:import_url)
     # - Build variables (:variables)
     # - GitLab Pages SSL cert/key info (:certificate, :encrypted_key)
     # - Webhook URLs (:hook)
-    # - GitLab-shell secret token (:secret_token)
     # - Sentry DSN (:sentry_dsn)
     # - Deploy keys (:key)
+    config.filter_parameters += [/token$/, /password/, /secret/]
     config.filter_parameters += %i(
       certificate
       encrypted_key
@@ -61,10 +70,6 @@ module Gitlab
       import_url
       key
       otp_attempt
-      password
-      password_confirmation
-      private_token
-      secret_token
       sentry_dsn
       variables
     )
@@ -77,29 +82,31 @@ module Gitlab
     # like if you have constraints or database-specific column types
     # config.active_record.schema_format = :sql
 
+    # Configure webpack
+    config.webpack.config_file = "config/webpack.config.js"
+    config.webpack.output_dir  = "public/assets/webpack"
+    config.webpack.public_path = "assets/webpack"
+
+    # Webpack dev server configuration is handled in initializers/static_files.rb
+    config.webpack.dev_server.enabled = false
+
     # Enable the asset pipeline
     config.assets.enabled = true
+    # Support legacy unicode file named img emojis, `1F939.png`
     config.assets.paths << Gemojione.images_path
+    config.assets.paths << "vendor/assets/fonts"
     config.assets.precompile << "*.png"
     config.assets.precompile << "print.css"
     config.assets.precompile << "notify.css"
     config.assets.precompile << "mailers/*.css"
-    config.assets.precompile << "graphs/graphs_bundle.js"
-    config.assets.precompile << "users/users_bundle.js"
-    config.assets.precompile << "network/network_bundle.js"
-    config.assets.precompile << "profile/profile_bundle.js"
-    config.assets.precompile << "protected_branches/protected_branches_bundle.js"
-    config.assets.precompile << "diff_notes/diff_notes_bundle.js"
-    config.assets.precompile << "boards/boards_bundle.js"
-    config.assets.precompile << "cycle_analytics/cycle_analytics_bundle.js"
-    config.assets.precompile << "merge_conflicts/merge_conflicts_bundle.js"
-    config.assets.precompile << "boards/test_utils/simulate_drag.js"
-    config.assets.precompile << "environments/environments_bundle.js"
-    config.assets.precompile << "blob_edit/blob_edit_bundle.js"
-    config.assets.precompile << "snippet/snippet_bundle.js"
-    config.assets.precompile << "lib/utils/*.js"
-    config.assets.precompile << "lib/*.js"
-    config.assets.precompile << "u2f.js"
+    config.assets.precompile << "katex.css"
+    config.assets.precompile << "katex.js"
+    config.assets.precompile << "xterm/xterm.css"
+    config.assets.precompile << "performance_bar.css"
+    config.assets.precompile << "lib/ace.js"
+    config.assets.precompile << "vendor/assets/fonts/*"
+    config.assets.precompile << "test.css"
+    config.assets.precompile << "locale/**/app.js"
 
     # Version of your assets, change this if you want to expire all your assets
     config.assets.version = '1.0'
@@ -116,7 +123,7 @@ module Gitlab
           credentials: true,
           headers: :any,
           methods: :any,
-          expose: ['Link']
+          expose: ['Link', 'X-Total', 'X-Total-Pages', 'X-Per-Page', 'X-Page', 'X-Next-Page', 'X-Prev-Page']
       end
 
       # Cross-origin requests must not have the session cookie available
@@ -126,19 +133,19 @@ module Gitlab
           credentials: false,
           headers: :any,
           methods: :any,
-          expose: ['Link']
+          expose: ['Link', 'X-Total', 'X-Total-Pages', 'X-Per-Page', 'X-Page', 'X-Next-Page', 'X-Prev-Page']
       end
     end
 
-    # Use Redis caching across all environments
-    redis_config_hash = Gitlab::Redis.params
-    redis_config_hash[:namespace] = Gitlab::Redis::CACHE_NAMESPACE
-    redis_config_hash[:expires_in] = 2.weeks # Cache should not grow forever
+    # Use caching across all environments
+    caching_config_hash = Gitlab::Redis::Cache.params
+    caching_config_hash[:namespace] = Gitlab::Redis::Cache::CACHE_NAMESPACE
+    caching_config_hash[:expires_in] = 2.weeks # Cache should not grow forever
     if Sidekiq.server? # threaded context
-      redis_config_hash[:pool_size] = Sidekiq.options[:concurrency] + 5
-      redis_config_hash[:pool_timeout] = 1
+      caching_config_hash[:pool_size] = Sidekiq.options[:concurrency] + 5
+      caching_config_hash[:pool_timeout] = 1
     end
-    config.cache_store = :redis_store, redis_config_hash
+    config.cache_store = :redis_store, caching_config_hash
 
     config.active_record.raise_in_transactional_callbacks = true
 
@@ -146,9 +153,35 @@ module Gitlab
 
     # This is needed for gitlab-shell
     ENV['GITLAB_PATH_OUTSIDE_HOOK'] = ENV['PATH']
+    ENV['GIT_TERMINAL_PROMPT'] = '0'
+
+    # Gitlab Read-only middleware support
+    config.middleware.insert_after ActionDispatch::Flash, 'Gitlab::Middleware::ReadOnly'
 
     config.generators do |g|
       g.factory_girl false
+    end
+
+    config.after_initialize do
+      Rails.application.reload_routes!
+
+      project_url_helpers = Module.new do
+        extend ActiveSupport::Concern
+
+        Gitlab::Application.routes.named_routes.helper_names.each do |name|
+          next unless name.include?('namespace_project')
+
+          define_method(name.sub('namespace_project', 'project')) do |project, *args|
+            send(name, project&.namespace, project, *args) # rubocop:disable GitlabSecurity/PublicSend
+          end
+        end
+      end
+
+      # We add the MilestonesRoutingHelper because we know that this does not
+      # conflict with the methods defined in `project_url_helpers`, and we want
+      # these methods available in the same places.
+      Gitlab::Routing.add_helpers(project_url_helpers)
+      Gitlab::Routing.add_helpers(MilestonesRoutingHelper)
     end
   end
 end

@@ -1,11 +1,13 @@
 require:
   - rubocop-rspec
+  - rubocop-gitlab-security
   - ./rubocop/rubocop
 
 inherit_from: .rubocop_todo.yml
 
 AllCops:
-  TargetRubyVersion: 2.1
+  TargetRubyVersion: 2.3
+  TargetRailsVersion: 4.2
   # Cop names are not d§splayed in offense messages by default. Change behavior
   # by overriding DisplayCopNames, or by giving the -D/--display-cop-names
   # option.
@@ -17,25 +19,243 @@ AllCops:
   # Exclude some GitLab files
   Exclude:
     - 'vendor/**/*'
+    - 'node_modules/**/*'
     - 'db/*'
     - 'db/fixtures/**/*'
     - 'tmp/**/*'
     - 'bin/**/*'
-    - 'lib/backup/**/*'
-    - 'lib/ci/backup/**/*'
-    - 'lib/tasks/**/*'
-    - 'lib/ci/migrate/**/*'
-    - 'lib/email_validator.rb'
-    - 'lib/gitlab/upgrader.rb'
-    - 'lib/gitlab/seeder.rb'
     - 'generator_templates/**/*'
+    - 'builds/**/*'
 
+# Gems in consecutive lines should be alphabetically sorted
+Bundler/OrderedGems:
+  Enabled: false
 
-##################### Style ##################################
+# Layout ######################################################################
 
 # Check indentation of private/protected visibility modifiers.
-Style/AccessModifierIndentation:
+Layout/AccessModifierIndentation:
   Enabled: true
+
+# Align the elements of an array literal if they span more than one line.
+Layout/AlignArray:
+  Enabled: true
+
+# Align the elements of a hash literal if they span more than one line.
+Layout/AlignHash:
+  Enabled: true
+
+# Here we check if the parameters on a multi-line method call or
+# definition are aligned.
+Layout/AlignParameters:
+  Enabled: false
+
+# Put end statement of multiline block on its own line.
+Layout/BlockEndNewline:
+  Enabled: true
+
+# Indentation of when in a case/when/[else/]end.
+Layout/CaseIndentation:
+  Enabled: true
+
+# Indentation of comments.
+Layout/CommentIndentation:
+  Enabled: true
+
+# Multi-line method chaining should be done with leading dots.
+Layout/DotPosition:
+  Enabled: true
+  EnforcedStyle: leading
+
+# Align elses and elsifs correctly.
+Layout/ElseAlignment:
+  Enabled: true
+
+# Add an empty line after magic comments to separate them from code.
+Layout/EmptyLineAfterMagicComment:
+  Enabled: false
+
+# Use empty lines between defs.
+Layout/EmptyLineBetweenDefs:
+  Enabled: true
+
+# Don't use several empty lines in a row.
+Layout/EmptyLines:
+  Enabled: true
+
+# Keep blank lines around access modifiers.
+Layout/EmptyLinesAroundAccessModifier:
+  Enabled: true
+
+# Keeps track of empty lines around block bodies.
+Layout/EmptyLinesAroundBlockBody:
+  Enabled: true
+
+# Keeps track of empty lines around class bodies.
+Layout/EmptyLinesAroundClassBody:
+  Enabled: true
+
+# Keeps track of empty lines around exception handling keywords.
+Layout/EmptyLinesAroundExceptionHandlingKeywords:
+  Enabled: false
+
+# Keeps track of empty lines around method bodies.
+Layout/EmptyLinesAroundMethodBody:
+  Enabled: true
+
+# Keeps track of empty lines around module bodies.
+Layout/EmptyLinesAroundModuleBody:
+  Enabled: true
+
+# Use Unix-style line endings.
+Layout/EndOfLine:
+  Enabled: true
+
+# Checks for a line break before the first parameter in a multi-line method
+# parameter definition.
+Layout/FirstMethodParameterLineBreak:
+  Enabled: true
+
+# Keep indentation straight.
+Layout/IndentationConsistency:
+  Enabled: true
+
+# Use 2 spaces for indentation.
+Layout/IndentationWidth:
+  Enabled: true
+
+# Checks the indentation of the first line of the right-hand-side of a
+# multi-line assignment.
+Layout/IndentAssignment:
+  Enabled: true
+
+# This cops checks the indentation of the here document bodies.
+Layout/IndentHeredoc:
+  Enabled: false
+
+# Comments should start with a space.
+Layout/LeadingCommentSpace:
+  Enabled: true
+
+# Checks that the closing brace in an array literal is either on the same line
+# as the last array element, or a new line.
+Layout/MultilineArrayBraceLayout:
+  Enabled: true
+  EnforcedStyle: symmetrical
+
+# Ensures newlines after multiline block do statements.
+Layout/MultilineBlockLayout:
+  Enabled: true
+
+# Checks that the closing brace in a hash literal is either on the same line as
+# the last hash element, or a new line.
+Layout/MultilineHashBraceLayout:
+  Enabled: true
+  EnforcedStyle: symmetrical
+
+# Checks that the closing brace in a method call is either on the same line as
+# the last method argument, or a new line.
+Layout/MultilineMethodCallBraceLayout:
+  Enabled: false
+  EnforcedStyle: symmetrical
+
+# Checks indentation of method calls with the dot operator that span more than
+# one line.
+Layout/MultilineMethodCallIndentation:
+  Enabled: false
+
+# Checks that the closing brace in a method definition is symmetrical with
+# respect to the opening brace and the method parameters.
+Layout/MultilineMethodDefinitionBraceLayout:
+  Enabled: false
+
+# Checks indentation of binary operations that span more than one line.
+Layout/MultilineOperationIndentation:
+  Enabled: true
+  EnforcedStyle: indented
+
+# Use spaces after colons.
+Layout/SpaceAfterColon:
+  Enabled: true
+
+# Use spaces after commas.
+Layout/SpaceAfterComma:
+  Enabled: true
+
+# Do not put a space between a method name and the opening parenthesis in a
+# method definition.
+Layout/SpaceAfterMethodName:
+  Enabled: true
+
+# Tracks redundant space after the ! operator.
+Layout/SpaceAfterNot:
+  Enabled: true
+
+# Use spaces after semicolons.
+Layout/SpaceAfterSemicolon:
+  Enabled: true
+
+# Use space around equals in parameter default
+Layout/SpaceAroundEqualsInParameterDefault:
+  Enabled: true
+
+# Use a space around keywords if appropriate.
+Layout/SpaceAroundKeyword:
+  Enabled: true
+
+# Use a single space around operators.
+Layout/SpaceAroundOperators:
+  Enabled: true
+
+# Checks that block braces have or don't have a space before the opening
+# brace depending on configuration.
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+# SupportedStyles: space, no_space
+Layout/SpaceBeforeBlockBraces:
+  Enabled: true
+
+# No spaces before commas.
+Layout/SpaceBeforeComma:
+  Enabled: true
+
+# Checks for missing space between code and a comment on the same line.
+Layout/SpaceBeforeComment:
+  Enabled: true
+
+# No spaces before semicolons.
+Layout/SpaceBeforeSemicolon:
+  Enabled: true
+
+# Checks for spaces inside square brackets.
+Layout/SpaceInsideBrackets:
+  Enabled: true
+
+# Use spaces inside hash literal braces - or don't.
+Layout/SpaceInsideHashLiteralBraces:
+  Enabled: true
+
+# No spaces inside range literals.
+Layout/SpaceInsideRangeLiteral:
+  Enabled: true
+
+# Checks for padding/surrounding spaces inside string interpolation.
+Layout/SpaceInsideStringInterpolation:
+  EnforcedStyle: no_space
+  Enabled: true
+
+# No hard tabs.
+Layout/Tab:
+  Enabled: true
+
+# Checks trailing blank lines and final newline.
+Layout/TrailingBlankLines:
+  Enabled: true
+
+# Avoid trailing whitespace.
+Layout/TrailingWhitespace:
+  Enabled: true
+
+# Style #######################################################################
 
 # Check the naming of accessor methods for get_/set_.
 Style/AccessorMethodName:
@@ -46,12 +266,9 @@ Style/Alias:
   EnforcedStyle: prefer_alias_method
   Enabled: true
 
-# Align the elements of an array literal if they span more than one line.
-Style/AlignArray:
-  Enabled: true
-
-# Align the elements of a hash literal if they span more than one line.
-Style/AlignHash:
+# Whether `and` and `or` are banned only in conditionals (conditionals)
+# or completely (always).
+Style/AndOr:
   Enabled: true
 
 # Use `Array#join` instead of `Array#*`.
@@ -78,18 +295,19 @@ Style/BeginBlock:
 Style/BlockComments:
   Enabled: true
 
-# Put end statement of multiline block on its own line.
-Style/BlockEndNewline:
-  Enabled: true
-
 # Avoid using {...} for multi-line blocks (multiline chaining is # always
 # ugly). Prefer {...} over do...end for single-line blocks.
 Style/BlockDelimiters:
   Enabled: true
 
-# Indentation of when in a case/when/[else/]end.
-Style/CaseIndentation:
-  Enabled: true
+ # This cop checks for braces around the last parameter in a method call
+# if the last parameter is a hash.
+Style/BracesAroundHashParameters:
+  Enabled: false
+
+# This cop checks for uses of the case equality operator(===).
+Style/CaseEquality:
+  Enabled: false
 
 # Checks for uses of character literals.
 Style/CharacterLiteral:
@@ -105,7 +323,7 @@ Style/ClassAndModuleChildren:
 
 # Enforces consistent use of `Object#is_a?` or `Object#kind_of?`.
 Style/ClassCheck:
-  Enabled: false
+  Enabled: true
 
 # Use self when defining module/class methods.
 Style/ClassMethods:
@@ -115,8 +333,20 @@ Style/ClassMethods:
 Style/ClassVars:
   Enabled: true
 
-# Indentation of comments.
-Style/CommentIndentation:
+# This cop checks for methods invoked via the :: operator instead
+# of the . operator (like FileUtils::rmdir instead of FileUtils.rmdir).
+Style/ColonMethodCall:
+  Enabled: true
+
+# This cop checks that comment annotation keywords are written according
+# to guidelines.
+Style/CommentAnnotation:
+  Enabled: false
+
+# Check for `if` and `case` statements where each branch is used for
+# assignment to the same variable when using the return of the
+# condition can be used instead.
+Style/ConditionalAssignment:
   Enabled: true
 
 # Constants should use SCREAMING_SNAKE_CASE.
@@ -131,44 +361,14 @@ Style/DefWithParentheses:
 Style/Documentation:
   Enabled: false
 
-# Align elses and elsifs correctly.
-Style/ElseAlignment:
-  Enabled: true
-
-# Use empty lines between defs.
-Style/EmptyLineBetweenDefs:
+# This cop checks for uses of double negation (!!) to convert something
+# to a boolean value. As this is both cryptic and usually redundant, it
+# should be avoided.
+Style/DoubleNegation:
   Enabled: false
-
-# Don't use several empty lines in a row.
-Style/EmptyLines:
-  Enabled: true
-
-# Keep blank lines around access modifiers.
-Style/EmptyLinesAroundAccessModifier:
-  Enabled: true
-
-# Keeps track of empty lines around block bodies.
-Style/EmptyLinesAroundBlockBody:
-  Enabled: true
-
-# Keeps track of empty lines around class bodies.
-Style/EmptyLinesAroundClassBody:
-  Enabled: true
-
-# Keeps track of empty lines around module bodies.
-Style/EmptyLinesAroundModuleBody:
-  Enabled: true
-
-# Keeps track of empty lines around method bodies.
-Style/EmptyLinesAroundMethodBody:
-  Enabled: true
 
 # Avoid the use of END blocks.
 Style/EndBlock:
-  Enabled: true
-
-# Use Unix-style line endings.
-Style/EndOfLine:
   Enabled: true
 
 # Favor the use of Fixnum#even? && Fixnum#odd?
@@ -179,11 +379,6 @@ Style/EvenOdd:
 Style/FileName:
   Enabled: true
 
-# Checks for a line break before the first parameter in a multi-line method
-# parameter definition.
-Style/FirstMethodParameterLineBreak:
-  Enabled: true
-
 # Checks for flip flops.
 Style/FlipFlop:
   Enabled: true
@@ -192,20 +387,24 @@ Style/FlipFlop:
 Style/For:
   Enabled: true
 
+# Use a consistent style for format string tokens.
+Style/FormatStringToken:
+  Enabled: false
+
 # Checks if there is a magic comment to enforce string literals
 Style/FrozenStringLiteralComment:
   Enabled: false
+
 # Do not introduce global variables.
 Style/GlobalVars:
   Enabled: true
+  Exclude:
+    - 'lib/backup/**/*'
+    - 'lib/tasks/**/*'
 
 # Prefer Ruby 1.9 hash syntax `{ a: 1, b: 2 }`
 # over 1.8 syntax `{ :a => 1, :b => 2 }`.
 Style/HashSyntax:
-  Enabled: true
-
-# Do not use if x; .... Use the ternary operator instead.
-Style/IfWithSemicolon:
   Enabled: true
 
 # Checks that conditional statements do not have an identical line at the
@@ -213,29 +412,21 @@ Style/IfWithSemicolon:
 Style/IdenticalConditionalBranches:
   Enabled: true
 
-# Checks the indentation of the first line of the right-hand-side of a
-# multi-line assignment.
-Style/IndentAssignment:
-  Enabled: true
-
-# Keep indentation straight.
-Style/IndentationConsistency:
-  Enabled: true
-
-# Use 2 spaces for indentation.
-Style/IndentationWidth:
+# Do not use if x; .... Use the ternary operator instead.
+Style/IfWithSemicolon:
   Enabled: true
 
 # Use Kernel#loop for infinite loops.
 Style/InfiniteLoop:
   Enabled: true
 
+# Use the inverse method instead of `!.method`
+# if an inverse method is defined.
+Style/InverseMethods:
+  Enabled: false
+
 # Use lambda.call(...) instead of lambda.(...).
 Style/LambdaCall:
-  Enabled: true
-
-# Comments should start with a space.
-Style/LeadingCommentSpace:
   Enabled: true
 
 # Checks if the method definitions have or don't have parentheses.
@@ -250,53 +441,30 @@ Style/MethodName:
 Style/ModuleFunction:
   Enabled: false
 
-# Checks that the closing brace in an array literal is either on the same line
-# as the last array element, or a new line.
-Style/MultilineArrayBraceLayout:
-  Enabled: false
-  EnforcedStyle: symmetrical
-
 # Avoid multi-line chains of blocks.
 Style/MultilineBlockChain:
   Enabled: true
-
-# Ensures newlines after multiline block do statements.
-Style/MultilineBlockLayout:
-  Enabled: true
-
-# Checks that the closing brace in a hash literal is either on the same line as
-# the last hash element, or a new line.
-Style/MultilineHashBraceLayout:
-  Enabled: false
-  EnforcedStyle: symmetrical
 
 # Do not use then for multi-line if/unless.
 Style/MultilineIfThen:
   Enabled: true
 
-# Checks that the closing brace in a method call is either on the same line as
-# the last method argument, or a new line.
-Style/MultilineMethodCallBraceLayout:
-  Enabled: false
-  EnforcedStyle: symmetrical
-
-# Checks indentation of method calls with the dot operator that span more than
-# one line.
-Style/MultilineMethodCallIndentation:
-  Enabled: false
-
-# Checks that the closing brace in a method definition is symmetrical with
-# respect to the opening brace and the method parameters.
-Style/MultilineMethodDefinitionBraceLayout:
-  Enabled: false
-
-# Checks indentation of binary operations that span more than one line.
-Style/MultilineOperationIndentation:
-  Enabled: false
-
 # Avoid multi-line `? :` (the ternary operator), use if/unless instead.
 Style/MultilineTernaryOperator:
   Enabled: true
+
+# Avoid comparing a variable with multiple items in a conditional,
+# use Array#include? instead.
+Style/MultipleComparison:
+  Enabled: false
+
+# This cop checks whether some constant value isn't a
+# mutable literal (e.g. array or hash).
+Style/MutableConstant:
+  Enabled: true
+  Exclude:
+    - 'db/migrate/**/*'
+    - 'db/post_migrate/**/*'
 
 # Favor unless over if for negative conditions (or control flow or).
 Style/NegatedIf:
@@ -338,12 +506,21 @@ Style/OpMethod:
 Style/ParenthesesAroundCondition:
   Enabled: true
 
-# Checks for parentheses that seem not to serve any purpose.
-Style/RedundantParentheses:
+# This cop (by default) checks for uses of methods Hash#has_key? and
+# Hash#has_value? where it enforces Hash#key? and Hash#value?
+# It is configurable to enforce the inverse, using `verbose` method
+# names also.
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+# SupportedStyles: short, verbose
+Style/PreferredHashMethods:
+  Enabled: false
+
+# Checks for an obsolete RuntimeException argument in raise/fail.
+Style/RedundantException:
   Enabled: true
 
-# Don't use return where it's not required.
-Style/RedundantReturn:
+# Checks for parentheses that seem not to serve any purpose.
+Style/RedundantParentheses:
   Enabled: true
 
 # Don't use semicolons to terminate expressions.
@@ -353,64 +530,6 @@ Style/Semicolon:
 # Checks for proper usage of fail and raise.
 Style/SignalException:
   EnforcedStyle: only_raise
-  Enabled: true
-
-# Use spaces after colons.
-Style/SpaceAfterColon:
-  Enabled: true
-
-# Use spaces after commas.
-Style/SpaceAfterComma:
-  Enabled: true
-
-# Do not put a space between a method name and the opening parenthesis in a
-# method definition.
-Style/SpaceAfterMethodName:
-  Enabled: true
-
-# Tracks redundant space after the ! operator.
-Style/SpaceAfterNot:
-  Enabled: true
-
-# Use spaces after semicolons.
-Style/SpaceAfterSemicolon:
-  Enabled: true
-
-# Use space around equals in parameter default
-Style/SpaceAroundEqualsInParameterDefault:
-  Enabled: true
-
-# Use a space around keywords if appropriate.
-Style/SpaceAroundKeyword:
-  Enabled: true
-
-# Use a single space around operators.
-Style/SpaceAroundOperators:
-  Enabled: true
-
-# No spaces before commas.
-Style/SpaceBeforeComma:
-  Enabled: true
-
-# Checks for missing space between code and a comment on the same line.
-Style/SpaceBeforeComment:
-  Enabled: true
-
-# No spaces before semicolons.
-Style/SpaceBeforeSemicolon:
-  Enabled: true
-
-# Use spaces inside hash literal braces - or don't.
-Style/SpaceInsideHashLiteralBraces:
-  Enabled: true
-
-# No spaces inside range literals.
-Style/SpaceInsideRangeLiteral:
-  Enabled: true
-
-# Checks for padding/surrounding spaces inside string interpolation.
-Style/SpaceInsideStringInterpolation:
-  EnforcedStyle: no_space
   Enabled: true
 
 # Check for the usage of parentheses around stabby lambda arguments.
@@ -428,13 +547,19 @@ Style/StringMethods:
     intern: to_sym
   Enabled: true
 
-# No hard tabs.
-Style/Tab:
-  Enabled: true
+# Use %i or %I for arrays of symbols.
+Style/SymbolArray:
+  Enabled: false
 
-# Checks trailing blank lines and final newline.
-Style/TrailingBlankLines:
+# This cop checks for trailing comma in array and hash literals.
+Style/TrailingCommaInLiteral:
   Enabled: true
+  EnforcedStyleForMultiline: no_comma
+
+# This cop checks for trailing comma in argument lists.
+Style/TrailingCommaInArguments:
+  Enabled: true
+  EnforcedStyleForMultiline: no_comma
 
 # Checks for %W when interpolation is not needed.
 Style/UnneededCapitalW:
@@ -471,15 +596,39 @@ Style/WhileUntilModifier:
 
 # Use %w or %W for arrays of words.
 Style/WordArray:
+  Enabled: true
+
+# Do not use literals as the first operand of a comparison.
+Style/YodaCondition:
   Enabled: false
 
-#################### Metrics ################################
+# Use `proc` instead of `Proc.new`.
+Style/Proc:
+  Enabled: true
+
+# Use `spam?` instead of `is_spam?`
+# Configuration parameters: NamePrefix, NamePrefixBlacklist, NameWhitelist.
+# NamePrefix: is_, has_, have_
+# NamePrefixBlacklist: is_, has_, have_
+# NameWhitelist: is_a?
+Style/PredicateName:
+  Enabled: true
+  NamePrefixBlacklist: is_
+  Exclude:
+    - 'spec/**/*'
+    - 'features/**/*'
+
+# Metrics #####################################################################
 
 # A calculated magnitude based on number of assignments,
 # branches, and conditions.
 Metrics/AbcSize:
   Enabled: true
-  Max: 60
+  Max: 54.28
+
+# This cop checks if the length of a block exceeds some maximum value.
+Metrics/BlockLength:
+  Enabled: false
 
 # Avoid excessive block nesting.
 Metrics/BlockNesting:
@@ -494,7 +643,7 @@ Metrics/ClassLength:
 # of test cases needed to validate a method.
 Metrics/CyclomaticComplexity:
   Enabled: true
-  Max: 17
+  Max: 13
 
 # Limit lines to 80 characters.
 Metrics/LineLength:
@@ -516,24 +665,29 @@ Metrics/ParameterLists:
 # A complexity metric geared towards measuring complexity for a human reader.
 Metrics/PerceivedComplexity:
   Enabled: true
-  Max: 18
+  Max: 14
 
+# Lint ########################################################################
 
-#################### Lint ################################
-
-# Checks for useless access modifiers.
-Lint/UselessAccessModifier:
-  Enabled: true
-
-# Checks for attempts to use `private` or `protected` to set the visibility
-# of a class method, which does not work.
-Lint/IneffectiveAccessModifier:
+# Checks for ambiguous block association with method when param passed without
+# parentheses.
+Lint/AmbiguousBlockAssociation:
   Enabled: false
 
 # Checks for ambiguous operators in the first argument of a method invocation
 # without parentheses.
 Lint/AmbiguousOperator:
   Enabled: true
+
+# This cop checks for ambiguous regexp literals in the first argument of
+# a method invocation without parentheses.
+Lint/AmbiguousRegexpLiteral:
+  Enabled: false
+
+# This cop checks for assignments in the conditions of
+# if/while/until.
+Lint/AssignmentInCondition:
+  Enabled: false
 
 # Align block ends correctly.
 Lint/BlockAlignment:
@@ -572,6 +726,10 @@ Lint/ElseLayout:
 Lint/EmptyEnsure:
   Enabled: true
 
+# Checks for the presence of `when` branches without a body.
+Lint/EmptyWhen:
+  Enabled: true
+
 # Align ends correctly.
 Lint/EndAlignment:
   Enabled: true
@@ -584,10 +742,6 @@ Lint/EndInMethod:
 Lint/EnsureReturn:
   Enabled: true
 
-# The use of eval represents a serious security risk.
-Lint/Eval:
-  Enabled: true
-
 # Catches floating-point literals too large or small for Ruby to represent.
 Lint/FloatOutOfRange:
   Enabled: true
@@ -596,10 +750,19 @@ Lint/FloatOutOfRange:
 Lint/FormatParameterMismatch:
   Enabled: true
 
+# This cop checks for *rescue* blocks with no body.
+Lint/HandleExceptions:
+  Enabled: false
+
 # Checks for adjacent string literals on the same line, which could better be
 # represented as a single string literal.
 Lint/ImplicitStringConcatenation:
   Enabled: true
+
+# Checks for attempts to use `private` or `protected` to set the visibility
+# of a class method, which does not work.
+Lint/IneffectiveAccessModifier:
+  Enabled: false
 
 # Checks for invalid character literals with a non-escaped whitespace
 # character.
@@ -613,6 +776,10 @@ Lint/LiteralInCondition:
 # Checks for literals used in interpolation.
 Lint/LiteralInInterpolation:
   Enabled: true
+
+# This cop checks for uses of *begin...end while/until something*.
+Lint/Loop:
+  Enabled: false
 
 # Do not use nested method definitions.
 Lint/NestedMethodDefinition:
@@ -643,6 +810,11 @@ Lint/RescueException:
 Lint/ShadowedException:
   Enabled: false
 
+# This cop looks for use of the same name as outer local variables
+# for block arguments or block local variables.
+Lint/ShadowingOuterLocalVariable:
+  Enabled: false
+
 # Checks for Object#to_s usage in string interpolation.
 Lint/StringConversionInInterpolation:
   Enabled: true
@@ -651,14 +823,34 @@ Lint/StringConversionInInterpolation:
 Lint/UnderscorePrefixedVariableName:
   Enabled: true
 
+# This cop checks for using Fixnum or Bignum constant
+Lint/UnifiedInteger:
+  Enabled: true
+
 # Checks for rubocop:disable comments that can be removed.
 # Note: this cop is not disabled when disabling all cops.
 # It must be explicitly disabled.
 Lint/UnneededDisable:
   Enabled: false
 
+# This cop checks for unneeded usages of splat expansion
+Lint/UnneededSplatExpansion:
+  Enabled: false
+
 # Unreachable code.
 Lint/UnreachableCode:
+  Enabled: true
+
+# This cop checks for unused block arguments.
+Lint/UnusedBlockArgument:
+  Enabled: false
+
+# This cop checks for unused method arguments.
+Lint/UnusedMethodArgument:
+  Enabled: false
+
+# Checks for useless access modifiers.
+Lint/UselessAccessModifier:
   Enabled: true
 
 # Checks for useless assignment to a local variable.
@@ -681,8 +873,11 @@ Lint/UselessSetterCall:
 Lint/Void:
   Enabled: true
 
+# Performance #################################################################
 
-##################### Performance ############################
+# Use `caller(n..n)` instead of `caller`.
+Performance/Caller:
+  Enabled: false
 
 # Use `casecmp` rather than `downcase ==`.
 Performance/Casecmp:
@@ -700,6 +895,22 @@ Performance/LstripRstrip:
 # Use `Range#cover?` instead of `Range#include?`.
 Performance/RangeInclude:
   Enabled: true
+
+# This cop identifies the use of a `&block` parameter and `block.call`
+# where `yield` would do just as well.
+Performance/RedundantBlockCall:
+  Enabled: true
+
+# This cop identifies use of `Regexp#match` or `String#match in a context
+# where the integral return value of `=~` would do just as well.
+Performance/RedundantMatch:
+  Enabled: true
+
+# This cop identifies places where `Hash#merge!` can be replaced by
+# `Hash#[]=`.
+Performance/RedundantMerge:
+  Enabled: true
+  MaxKeyValuePairs: 1
 
 # Use `sort` instead of `sort_by { |x| x }`.
 Performance/RedundantSortBy:
@@ -720,8 +931,18 @@ Performance/StringReplacement:
 Performance/TimesMap:
   Enabled: true
 
+# Security ####################################################################
 
-##################### Rails ##################################
+# This cop checks for the use of JSON class methods which have potential
+# security issues.
+Security/JSONLoad:
+  Enabled: true
+
+# This cop checks for the use of *Kernel#eval*.
+Security/Eval:
+  Enabled: true
+
+# Rails #######################################################################
 
 # Enables Rails cops.
 Rails:
@@ -732,14 +953,34 @@ Rails/ActionFilter:
   Enabled: true
   EnforcedStyle: action
 
+# Check that models subclass ApplicationRecord.
+Rails/ApplicationRecord:
+  Enabled: false
+
+# Enforce using `blank?` and `present?`.
+Rails/Blank:
+  Enabled: false
+
 # Checks the correct usage of date aware methods, such as `Date.today`,
 # `Date.current`, etc.
 Rails/Date:
   Enabled: false
 
 # Prefer delegate method for delegations.
+# Disabled per https://gitlab.com/gitlab-org/gitlab-ce/issues/35869
 Rails/Delegate:
   Enabled: false
+
+# This cop checks dynamic `find_by_*` methods.
+Rails/DynamicFindBy:
+  Enabled: false
+
+# This cop enforces that 'exit' calls are not used within a rails app.
+Rails/Exit:
+  Enabled: true
+  Exclude:
+    - lib/gitlab/upgrader.rb
+    - 'lib/backup/**/*'
 
 # Prefer `find_by` over `where.first`.
 Rails/FindBy:
@@ -753,26 +994,66 @@ Rails/FindEach:
 Rails/HasAndBelongsToMany:
   Enabled: true
 
+# This cop is used to identify usages of http methods like `get`, `post`,
+# `put`, `patch` without the usage of keyword arguments in your tests and
+# change them to use keyword args.
+Rails/HttpPositionalArguments:
+  Enabled: false
+
 # Checks for calls to puts, print, etc.
 Rails/Output:
   Enabled: true
+  Exclude:
+    - lib/gitlab/seeder.rb
+    - lib/gitlab/upgrader.rb
+    - 'lib/backup/**/*'
+    - 'lib/tasks/**/*'
+
+# This cop checks for the use of output safety calls like html_safe and
+# raw.
+Rails/OutputSafety:
+  Enabled: false
 
 # Checks for incorrect grammar when using methods like `3.day.ago`.
 Rails/PluralizationGrammar:
   Enabled: true
 
+# Enforce using `blank?` and `present?`.
+Rails/Present:
+  Enabled: false
+
 # Checks for `read_attribute(:attr)` and `write_attribute(:attr, val)`.
 Rails/ReadWriteAttribute:
+  Enabled: false
+
+# Do not assign relative date to constants.
+Rails/RelativeDateConstant:
   Enabled: false
 
 # Checks the arguments of ActiveRecord scopes.
 Rails/ScopeArgs:
   Enabled: true
 
-##################### RSpec ##################################
+# This cop checks for the use of Time methods without zone.
+Rails/TimeZone:
+  Enabled: false
+
+# This cop checks for the use of old-style attribute validation macros.
+Rails/Validation:
+  Enabled: true
+
+# RSpec #######################################################################
 
 # Check that instances are not being stubbed globally.
 RSpec/AnyInstance:
+  Enabled: false
+
+# Check for expectations where `be(...)` can replace `eql(...)`.
+RSpec/BeEql:
+  Enabled: true
+
+# We don't enforce this as we use this technique in a few places.
+RSpec/BeforeAfterAll:
   Enabled: false
 
 # Check that the first argument to the top level describe is the tested class or
@@ -780,14 +1061,23 @@ RSpec/AnyInstance:
 RSpec/DescribeClass:
   Enabled: false
 
-# Use `described_class` for tested class / module.
+# Checks that the second argument to `describe` specifies a method.
 RSpec/DescribeMethod:
   Enabled: false
 
-# Checks that the second argument to top level describe is the tested method
-# name.
+# Avoid describing symbols.
+RSpec/DescribeSymbol:
+  Enabled: true
+
+# Checks that tests use `described_class`.
 RSpec/DescribedClass:
-  Enabled: false
+  Enabled: true
+
+# Checks if an example group does not include any tests.
+RSpec/EmptyExampleGroup:
+  Enabled: true
+  CustomIncludeMethods:
+    - run_permission_checks
 
 # Checks for long example.
 RSpec/ExampleLength:
@@ -803,23 +1093,72 @@ RSpec/ExampleWording:
     not: does not
   IgnoredWords: []
 
+# Checks for `expect(...)` calls containing literal values.
+RSpec/ExpectActual:
+  Enabled: true
+
+# Checks for opportunities to use `expect { … }.to output`.
+RSpec/ExpectOutput:
+  Enabled: true
+
 # Checks the file and folder naming of the spec file.
 RSpec/FilePath:
-  Enabled: false
-  CustomTransform:
-    RuboCop: rubocop
-    RSpec: rspec
+  Enabled: true
+  IgnoreMethods: true
+  Exclude:
+    - 'qa/**/*'
+    - 'spec/javascripts/fixtures/*'
+    - 'spec/requests/api/v3/*'
 
 # Checks if there are focused specs.
 RSpec/Focus:
   Enabled: true
 
+# Checks the arguments passed to `before`, `around`, and `after`.
+RSpec/HookArgument:
+  Enabled: true
+  EnforcedStyle: implicit
+
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+# SupportedStyles: is_expected, should
+RSpec/ImplicitExpect:
+  Enabled: true
+  EnforcedStyle: is_expected
+
 # Checks for the usage of instance variables.
 RSpec/InstanceVariable:
   Enabled: false
 
+# Checks for `subject` definitions that come after `let` definitions.
+RSpec/LeadingSubject:
+  Enabled: false
+
+# Checks unreferenced `let!` calls being used for test setup.
+RSpec/LetSetup:
+  Enabled: false
+
+# Check that chains of messages are not being stubbed.
+RSpec/MessageChain:
+  Enabled: false
+
+# Checks that message expectations are set using spies.
+RSpec/MessageSpies:
+  Enabled: false
+
 # Checks for multiple top-level describes.
 RSpec/MultipleDescribes:
+  Enabled: false
+
+# Checks if examples contain too many `expect` calls.
+RSpec/MultipleExpectations:
+  Enabled: false
+
+# Checks for explicitly referenced test subjects.
+RSpec/NamedSubject:
+  Enabled: false
+
+# Checks for nested example groups.
+RSpec/NestedGroups:
   Enabled: false
 
 # Enforces the usage of the same method on all negative message expectations.
@@ -827,6 +1166,61 @@ RSpec/NotToNot:
   EnforcedStyle: not_to
   Enabled: true
 
+# Check for repeated description strings in example groups.
+RSpec/RepeatedDescription:
+  Enabled: false
+
+# Ensure RSpec hook blocks are always multi-line.
+RSpec/SingleLineHook:
+  Enabled: true
+  Exclude:
+    - 'spec/factories/*'
+    - 'spec/requests/api/v3/*'
+
+# Checks for stubbed test subjects.
+RSpec/SubjectStub:
+  Enabled: false
+
 # Prefer using verifying doubles over normal doubles.
 RSpec/VerifiedDoubles:
   Enabled: false
+
+# GitlabSecurity ##############################################################
+
+GitlabSecurity/DeepMunge:
+  Enabled: true
+  Exclude:
+    - 'lib/**/*.rake'
+    - 'spec/**/*'
+
+# To be enabled by https://gitlab.com/gitlab-org/gitlab-ce/merge_requests/13610
+GitlabSecurity/JsonSerialization:
+  Enabled: false
+
+GitlabSecurity/PublicSend:
+  Enabled: true
+  Exclude:
+    - 'config/**/*'
+    - 'db/**/*'
+    - 'features/**/*'
+    - 'lib/**/*.rake'
+    - 'qa/**/*'
+    - 'spec/**/*'
+
+GitlabSecurity/RedirectToParamsUpdate:
+  Enabled: true
+  Exclude:
+    - 'lib/**/*.rake'
+    - 'spec/**/*'
+
+GitlabSecurity/SqlInjection:
+  Enabled: true
+  Exclude:
+    - 'lib/**/*.rake'
+    - 'spec/**/*'
+
+GitlabSecurity/SystemCommandInjection:
+  Enabled: true
+  Exclude:
+    - 'lib/**/*.rake'
+    - 'spec/**/*'

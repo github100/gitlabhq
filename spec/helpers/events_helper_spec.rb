@@ -2,8 +2,10 @@ require 'spec_helper'
 
 describe EventsHelper do
   describe '#event_note' do
+    let(:user) { build(:user) }
+
     before do
-      allow(helper).to receive(:current_user).and_return(double)
+      allow(helper).to receive(:current_user).and_return(user)
     end
 
     it 'displays one line of plain text without alteration' do
@@ -28,7 +30,7 @@ describe EventsHelper do
 
     it 'displays the first line of a code block' do
       input = "```\nCode block\nwith two lines\n```"
-      expected = %r{<pre.+><code>Code block\.\.\.</code></pre>}
+      expected = %r{<pre.+><code><span class="line">Code block\.\.\.</span>\n</code></pre>}
 
       expect(helper.event_note(input)).to match(expected)
     end
@@ -54,12 +56,38 @@ describe EventsHelper do
 
     it 'preserves code color scheme' do
       input = "```ruby\ndef test\n  'hello world'\nend\n```"
-      expected = '<pre class="code highlight js-syntax-highlight ruby">' \
-        "<code><span class=\"k\">def</span> <span class=\"nf\">test</span>\n" \
-        "  <span class=\"s1\">\'hello world\'</span>\n" \
-        "<span class=\"k\">end</span>\n" \
-        '</code></pre>'
+      expected = "\n<pre class=\"code highlight js-syntax-highlight ruby\">" \
+        "<code><span class=\"line\"><span class=\"k\">def</span> <span class=\"nf\">test</span>...</span>\n" \
+        "</code></pre>"
       expect(helper.event_note(input)).to eq(expected)
+    end
+
+    it 'preserves data-src for lazy images' do
+      input = "![ImageTest](/uploads/test.png)"
+      image_url = "data-src=\"/uploads/test.png\""
+      expect(helper.event_note(input)).to match(image_url)
+    end
+
+    context 'labels formatting' do
+      let(:input) { 'this should be ~label_1' }
+
+      def format_event_note(project)
+        create(:label, title: 'label_1', project: project)
+
+        helper.event_note(input, { project: project })
+      end
+
+      it 'preserves style attribute for a label that can be accessed by current_user' do
+        project = create(:project, :public)
+
+        expect(format_event_note(project)).to match(/span class=.*style=.*/)
+      end
+
+      it 'does not style a label that can not be accessed by current_user' do
+        project = create(:project, :private)
+
+        expect(format_event_note(project)).to eq("<p>#{input}</p>")
+      end
     end
   end
 
@@ -77,6 +105,10 @@ describe EventsHelper do
 
     it "handles empty strings" do
       expect(helper.event_commit_title("")).to eq("")
+    end
+
+    it 'handles nil values' do
+      expect(helper.event_commit_title(nil)).to eq('')
     end
   end
 end

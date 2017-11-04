@@ -22,6 +22,7 @@ module Banzai
 
         doc.css('img, video').each do |el|
           process_link_attr el.attribute('src')
+          process_link_attr el.attribute('data-src')
         end
 
         doc
@@ -46,11 +47,11 @@ module Banzai
       end
 
       def rebuild_relative_uri(uri)
-        file_path = relative_file_path(uri.path)
+        file_path = relative_file_path(uri)
 
         uri.path = [
           relative_url_root,
-          context[:project].path_with_namespace,
+          context[:project].full_path,
           uri_type(file_path),
           Addressable::URI.escape(ref),
           Addressable::URI.escape(file_path)
@@ -59,8 +60,10 @@ module Banzai
         uri
       end
 
-      def relative_file_path(path)
-        nested_path = build_relative_path(path, context[:requested_path])
+      def relative_file_path(uri)
+        path = Addressable::URI.unescape(uri.path)
+        request_path = Addressable::URI.unescape(context[:requested_path])
+        nested_path = build_relative_path(path, request_path)
         file_exists?(nested_path) ? nested_path : path
       end
 
@@ -108,11 +111,7 @@ module Banzai
       end
 
       def uri_type(path)
-        @uri_types[path] ||= begin
-          unescaped_path = Addressable::URI.unescape(path)
-
-          current_commit.uri_type(unescaped_path)
-        end
+        @uri_types[path] ||= current_commit.uri_type(path)
       end
 
       def current_commit

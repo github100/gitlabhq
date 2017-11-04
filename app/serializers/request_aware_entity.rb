@@ -2,10 +2,12 @@ module RequestAwareEntity
   extend ActiveSupport::Concern
 
   included do
-    include Gitlab::Routing.url_helpers
+    include Gitlab::Routing
+    include GitlabRoutingHelper
+    include Gitlab::Allowable
   end
 
   def request
-    @options.fetch(:request)
+    options.fetch(:request)
   end
 end

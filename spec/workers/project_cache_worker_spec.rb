@@ -1,18 +1,19 @@
 require 'spec_helper'
 
 describe ProjectCacheWorker do
-  let(:project) { create(:project) }
   let(:worker) { described_class.new }
+  let(:project) { create(:project, :repository) }
+  let(:statistics) { project.statistics }
 
   describe '#perform' do
     before do
-      allow_any_instance_of(Gitlab::ExclusiveLease).to receive(:try_obtain).
-        and_return(true)
+      allow_any_instance_of(Gitlab::ExclusiveLease).to receive(:try_obtain)
+        .and_return(true)
     end
 
     context 'with a non-existing project' do
       it 'does nothing' do
-        expect(worker).not_to receive(:update_repository_size)
+        expect(worker).not_to receive(:update_statistics)
 
         worker.perform(-1)
       end
@@ -22,58 +23,67 @@ describe ProjectCacheWorker do
       it 'does nothing' do
         allow_any_instance_of(Repository).to receive(:exists?).and_return(false)
 
-        expect(worker).not_to receive(:update_repository_size)
+        expect(worker).not_to receive(:update_statistics)
 
         worker.perform(project.id)
       end
     end
 
     context 'with an existing project' do
-      it 'updates the repository size' do
-        expect(worker).to receive(:update_repository_size).and_call_original
+      it 'updates the project statistics' do
+        expect(worker).to receive(:update_statistics)
+          .with(kind_of(Project), %i(repository_size))
+          .and_call_original
 
-        worker.perform(project.id)
-      end
-
-      it 'updates the commit count' do
-        expect_any_instance_of(Project).to receive(:update_commit_count).
-          and_call_original
-
-        worker.perform(project.id)
+        worker.perform(project.id, [], %w(repository_size))
       end
 
       it 'refreshes the method caches' do
-        expect_any_instance_of(Repository).to receive(:refresh_method_caches).
-          with(%i(readme)).
-          and_call_original
+        expect_any_instance_of(Repository).to receive(:refresh_method_caches)
+          .with(%i(readme))
+          .and_call_original
 
-        worker.perform(project.id, %i(readme))
+        worker.perform(project.id, %w(readme))
+      end
+
+      context 'with plain readme' do
+        it 'refreshes the method caches' do
+          allow(MarkupHelper).to receive(:gitlab_markdown?).and_return(false)
+          allow(MarkupHelper).to receive(:plain?).and_return(true)
+
+          expect_any_instance_of(Repository).to receive(:refresh_method_caches)
+                                                  .with(%i(readme))
+                                                  .and_call_original
+          worker.perform(project.id, %w(readme))
+        end
       end
     end
   end
 
-  describe '#update_repository_size' do
+  describe '#update_statistics' do
     context 'when a lease could not be obtained' do
       it 'does not update the repository size' do
-        allow(worker).to receive(:try_obtain_lease_for).
-          with(project.id, :update_repository_size).
-          and_return(false)
+        allow(worker).to receive(:try_obtain_lease_for)
+          .with(project.id, :update_statistics)
+          .and_return(false)
 
-        expect(project).not_to receive(:update_repository_size)
+        expect(statistics).not_to receive(:refresh!)
 
-        worker.update_repository_size(project)
+        worker.update_statistics(project)
       end
     end
 
     context 'when a lease could be obtained' do
-      it 'updates the repository size' do
-        allow(worker).to receive(:try_obtain_lease_for).
-          with(project.id, :update_repository_size).
-          and_return(true)
+      it 'updates the project statistics' do
+        allow(worker).to receive(:try_obtain_lease_for)
+          .with(project.id, :update_statistics)
+          .and_return(true)
 
-        expect(project).to receive(:update_repository_size).and_call_original
+        expect(statistics).to receive(:refresh!)
+          .with(only: %i(repository_size))
+          .and_call_original
 
-        worker.update_repository_size(project)
+        worker.update_statistics(project, %i(repository_size))
       end
     end
   end

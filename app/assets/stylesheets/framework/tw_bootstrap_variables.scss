@@ -31,6 +31,7 @@ $border-radius-small: 3px !default;
 //
 $text-color: $gl-text-color;
 $link-color: $gl-link-color;
+$link-hover-color: $gl-link-hover-color;
 
 
 //== Typography
@@ -65,20 +66,20 @@ $legend-color: $text-color;
 //
 //##
 
-$pagination-color: $gl-gray;
+$pagination-color: $gl-text-color;
 $pagination-bg: $white-light;
 $pagination-border: $border-color;
 
-$pagination-hover-color: $gl-gray;
+$pagination-hover-color: $gl-text-color;
 $pagination-hover-bg: $row-hover;
 $pagination-hover-border: $border-color;
 
-$pagination-active-color: $blue-dark;
-$pagination-active-bg: $white-light;
-$pagination-active-border: $border-color;
+$pagination-active-color: $white-light;
+$pagination-active-bg: $gl-link-color;
+$pagination-active-border: $gl-link-color;
 
 $pagination-disabled-color: #cdcdcd;
-$pagination-disabled-bg: $background-color;
+$pagination-disabled-bg: $gray-light;
 $pagination-disabled-border: $border-color;
 
 
@@ -117,9 +118,12 @@ $alert-border-radius: 0;
 $panel-border-radius: 2px;
 $panel-default-text: $text-color;
 $panel-default-border: $border-color;
-$panel-default-heading-bg: $background-color;
-$panel-footer-bg: $background-color;
+$panel-default-heading-bg: $gray-light;
+$panel-footer-bg: $gray-light;
 $panel-inner-border: $border-color;
+
+$badge-bg: $badge-bg;
+$badge-color: $badge-color;
 
 //== Wells
 //
@@ -132,8 +136,8 @@ $well-border: #eee;
 //
 //##
 
-$code-color: #c7254e;
-$code-bg: #f9f2f4;
+$code-color: $red-600;
+$code-bg: lighten($red-100, 2%);
 
 $kbd-color: $white-light;
 $kbd-bg: #333;
@@ -153,8 +157,10 @@ $nav-link-padding: 13px $gl-padding;
 //== Code
 //
 //##
-$pre-bg: $background-color !default;
-$pre-color: $gl-gray !default;
+$pre-bg: $gray-light !default;
+$pre-color: $gl-text-color !default;
 $pre-border-color: $border-color;
 
-$table-bg-accent: $background-color;
+$table-bg-accent: $gray-light;
+
+$zindex-popover: 900;

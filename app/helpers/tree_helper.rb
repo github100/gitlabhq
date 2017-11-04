@@ -12,10 +12,6 @@ module TreeHelper
     tree.html_safe
   end
 
-  def render_readme(readme)
-    render_markup(readme.name, readme.data)
-  end
-
   # Return an image icon depending on the file type and mode
   #
   # type - String type of the tree item; either 'folder' or 'file'
@@ -35,7 +31,7 @@ module TreeHelper
   end
 
   def on_top_of_branch?(project = @project, ref = @ref)
-    project.repository.branch_names.include?(ref)
+    project.repository.branch_exists?(ref)
   end
 
   def can_edit_tree?(project = nil, ref = nil)
@@ -80,19 +76,19 @@ module TreeHelper
     "A new branch will be created in your fork and a new merge request will be started."
   end
 
-  def tree_breadcrumbs(tree, max_links = 2)
+  def path_breadcrumbs(max_links = 6)
     if @path.present?
       part_path = ""
       parts = @path.split('/')
 
-      yield('..', nil) if parts.count > max_links
+      yield('..', File.join(*parts.first(parts.count - 2))) if parts.count > max_links
 
       parts.each do |part|
         part_path = File.join(part_path, part) unless part_path.empty?
         part_path = part if part_path.empty?
 
         next if parts.count > max_links && !parts.last(2).include?(part)
-        yield(part, tree_join(@ref, part_path))
+        yield(part, part_path)
       end
     end
   end
@@ -103,10 +99,12 @@ module TreeHelper
   end
 
   # returns the relative path of the first subdir that doesn't have only one directory descendant
-  def flatten_tree(tree)
+  def flatten_tree(root_path, tree)
+    return tree.flat_path.sub(/\A#{root_path}\//, '') if tree.flat_path.present?
+
     subtree = Gitlab::Git::Tree.where(@repository, @commit.id, tree.path)
     if subtree.count == 1 && subtree.first.dir?
-      return tree_join(tree.name, flatten_tree(subtree.first))
+      return tree_join(tree.name, flatten_tree(root_path, subtree.first))
     else
       return tree.name
     end

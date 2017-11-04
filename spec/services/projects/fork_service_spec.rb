@@ -1,17 +1,23 @@
 require 'spec_helper'
 
-describe Projects::ForkService, services: true do
-  describe :fork_by_user do
+describe Projects::ForkService do
+  include ProjectForksHelper
+  let(:gitlab_shell) { Gitlab::Shell.new }
+
+  describe 'fork by user' do
     before do
-      @from_namespace = create(:namespace)
-      @from_user = create(:user, namespace: @from_namespace )
+      @from_user = create(:user)
+      @from_namespace = @from_user.namespace
+      avatar = fixture_file_upload(Rails.root + "spec/fixtures/dk.png", "image/png")
       @from_project = create(:project,
+                             :repository,
                              creator_id: @from_user.id,
                              namespace: @from_namespace,
                              star_count: 107,
+                             avatar: avatar,
                              description: 'wow such project')
-      @to_namespace = create(:namespace)
-      @to_user = create(:user, namespace: @to_namespace)
+      @to_user = create(:user)
+      @to_namespace = @to_user.namespace
       @from_project.add_user(@to_user, :developer)
     end
 
@@ -28,7 +34,7 @@ describe Projects::ForkService, services: true do
       end
 
       describe "successfully creates project in the user namespace" do
-        let(:to_project) { fork_project(@from_project, @to_user) }
+        let(:to_project) { fork_project(@from_project, @to_user, namespace: @to_user.namespace) }
 
         it { expect(to_project).to be_persisted }
         it { expect(to_project.errors).to be_empty }
@@ -36,18 +42,85 @@ describe Projects::ForkService, services: true do
         it { expect(to_project.namespace).to eq(@to_user.namespace) }
         it { expect(to_project.star_count).to be_zero }
         it { expect(to_project.description).to eq(@from_project.description) }
+        it { expect(to_project.avatar.file).to be_exists }
+
+        # This test is here because we had a bug where the from-project lost its
+        # avatar after being forked.
+        # https://gitlab.com/gitlab-org/gitlab-ce/issues/26158
+        it "after forking the from-project still has its avatar" do
+          # If we do not fork the project first we cannot detect the bug.
+          expect(to_project).to be_persisted
+
+          expect(@from_project.avatar.file).to be_exists
+        end
+
+        it 'flushes the forks count cache of the source project' do
+          expect(@from_project.forks_count).to be_zero
+
+          fork_project(@from_project, @to_user)
+
+          expect(@from_project.forks_count).to eq(1)
+        end
+
+        it 'creates a fork network with the new project and the root project set' do
+          to_project
+          fork_network = @from_project.reload.fork_network
+
+          expect(fork_network).not_to be_nil
+          expect(fork_network.root_project).to eq(@from_project)
+          expect(fork_network.projects).to contain_exactly(@from_project, to_project)
+        end
+      end
+
+      context 'creating a fork of a fork' do
+        let(:from_forked_project) { fork_project(@from_project, @to_user) }
+        let(:other_namespace) do
+          group = create(:group)
+          group.add_owner(@to_user)
+          group
+        end
+        let(:to_project) { fork_project(from_forked_project, @to_user, namespace: other_namespace) }
+
+        it 'sets the root of the network to the root project' do
+          expect(to_project.fork_network.root_project).to eq(@from_project)
+        end
+
+        it 'sets the forked_from_project on the membership' do
+          expect(to_project.fork_network_member.forked_from_project).to eq(from_forked_project)
+        end
       end
     end
 
     context 'project already exists' do
       it "fails due to validation, not transaction failure" do
-        @existing_project = create(:project, creator_id: @to_user.id, name: @from_project.name, namespace: @to_namespace)
-        @to_project = fork_project(@from_project, @to_user)
+        @existing_project = create(:project, :repository, creator_id: @to_user.id, name: @from_project.name, namespace: @to_namespace)
+        @to_project = fork_project(@from_project, @to_user, namespace: @to_namespace)
         expect(@existing_project).to be_persisted
 
         expect(@to_project).not_to be_persisted
         expect(@to_project.errors[:name]).to eq(['has already been taken'])
         expect(@to_project.errors[:path]).to eq(['has already been taken'])
+      end
+    end
+
+    context 'repository already exists' do
+      let(:repository_storage) { 'default' }
+      let(:repository_storage_path) { Gitlab.config.repositories.storages[repository_storage]['path'] }
+
+      before do
+        gitlab_shell.add_repository(repository_storage, "#{@to_user.namespace.full_path}/#{@from_project.path}")
+      end
+
+      after do
+        gitlab_shell.remove_repository(repository_storage_path, "#{@to_user.namespace.full_path}/#{@from_project.path}")
+      end
+
+      it 'does not allow creation' do
+        to_project = fork_project(@from_project, @to_user, namespace: @to_user.namespace)
+
+        expect(to_project).not_to be_persisted
+        expect(to_project.errors.messages).to have_key(:base)
+        expect(to_project.errors.messages[:base].first).to match('There is already a repository with that name on disk')
       end
     end
 
@@ -87,13 +160,14 @@ describe Projects::ForkService, services: true do
     end
   end
 
-  describe :fork_to_namespace do
+  describe 'fork to namespace' do
     before do
       @group_owner = create(:user)
       @developer   = create(:user)
-      @project     = create(:project, creator_id: @group_owner.id,
-                                      star_count: 777,
-                                      description: 'Wow, such a cool project!')
+      @project     = create(:project, :repository,
+                            creator_id: @group_owner.id,
+                            star_count: 777,
+                            description: 'Wow, such a cool project!')
       @group = create(:group)
       @group.add_user(@group_owner, GroupMember::OWNER)
       @group.add_user(@developer,   GroupMember::DEVELOPER)
@@ -126,18 +200,14 @@ describe Projects::ForkService, services: true do
 
     context 'project already exists in group' do
       it 'fails due to validation, not transaction failure' do
-        existing_project = create(:project, name: @project.name,
-                                            namespace: @group)
+        existing_project = create(:project, :repository,
+                                  name: @project.name,
+                                  namespace: @group)
         to_project = fork_project(@project, @group_owner, @opts)
         expect(existing_project.persisted?).to be_truthy
         expect(to_project.errors[:name]).to eq(['has already been taken'])
         expect(to_project.errors[:path]).to eq(['has already been taken'])
       end
     end
-  end
-
-  def fork_project(from_project, user, params = {})
-    allow(RepositoryForkWorker).to receive(:perform_async).and_return(true)
-    Projects::ForkService.new(from_project, user, params).execute
   end
 end

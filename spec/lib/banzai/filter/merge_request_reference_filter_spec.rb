@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Banzai::Filter::MergeRequestReferenceFilter, lib: true do
+describe Banzai::Filter::MergeRequestReferenceFilter do
   include FilterSpecHelper
 
   let(:project) { create(:project, :public) }
@@ -17,14 +17,27 @@ describe Banzai::Filter::MergeRequestReferenceFilter, lib: true do
     end
   end
 
+  describe 'performance' do
+    let(:another_merge) { create(:merge_request, source_project: project, source_branch: 'fix') }
+
+    it 'does not have a N+1 query problem' do
+      single_reference = "Merge request #{merge.to_reference}"
+      multiple_references = "Merge requests #{merge.to_reference} and #{another_merge.to_reference}"
+
+      control_count = ActiveRecord::QueryRecorder.new { reference_filter(single_reference).to_html }.count
+
+      expect { reference_filter(multiple_references).to_html }.not_to exceed_query_limit(control_count)
+    end
+  end
+
   context 'internal reference' do
     let(:reference) { merge.to_reference }
 
     it 'links to a valid reference' do
       doc = reference_filter("See #{reference}")
 
-      expect(doc.css('a').first.attr('href')).to eq urls.
-        namespace_project_merge_request_url(project.namespace, project, merge)
+      expect(doc.css('a').first.attr('href')).to eq urls
+        .project_merge_request_url(project, merge)
     end
 
     it 'links with adjacent text' do
@@ -82,27 +95,98 @@ describe Banzai::Filter::MergeRequestReferenceFilter, lib: true do
       link = doc.css('a').first.attr('href')
 
       expect(link).not_to match %r(https?://)
-      expect(link).to eq urls.namespace_project_merge_request_url(project.namespace, project, merge, only_path: true)
+      expect(link).to eq urls.project_merge_request_url(project, merge, only_path: true)
     end
   end
 
-  context 'cross-project reference' do
-    let(:namespace) { create(:namespace, name: 'cross-reference') }
-    let(:project2)  { create(:project, :public, namespace: namespace) }
-    let(:merge)     { create(:merge_request, source_project: project2) }
-    let(:reference) { merge.to_reference(project) }
+  context 'cross-project / cross-namespace complete reference' do
+    let(:project2)          { create(:project, :public) }
+    let(:merge)             { create(:merge_request, source_project: project2) }
+    let(:reference)         { "#{project2.full_path}!#{merge.iid}" }
 
     it 'links to a valid reference' do
       doc = reference_filter("See #{reference}")
 
-      expect(doc.css('a').first.attr('href')).
-        to eq urls.namespace_project_merge_request_url(project2.namespace,
-                                                      project, merge)
+      expect(doc.css('a').first.attr('href'))
+        .to eq urls.project_merge_request_url(project2, merge)
     end
 
-    it 'links with adjacent text' do
+    it 'link has valid text' do
       doc = reference_filter("Merge (#{reference}.)")
-      expect(doc.to_html).to match(/\(<a.+>#{Regexp.escape(reference)}<\/a>\.\)/)
+
+      expect(doc.css('a').first.text).to eq(reference)
+    end
+
+    it 'has valid text' do
+      doc = reference_filter("Merge (#{reference}.)")
+
+      expect(doc.text).to eq("Merge (#{reference}.)")
+    end
+
+    it 'ignores invalid merge IDs on the referenced project' do
+      exp = act = "Merge #{invalidate_reference(reference)}"
+
+      expect(reference_filter(act).to_html).to eq exp
+    end
+  end
+
+  context 'cross-project / same-namespace complete reference' do
+    let(:namespace) { create(:namespace) }
+    let(:project)   { create(:project, :public, namespace: namespace) }
+    let(:project2)  { create(:project, :public, namespace: namespace) }
+    let!(:merge)    { create(:merge_request, source_project: project2) }
+    let(:reference) { "#{project2.full_path}!#{merge.iid}" }
+
+    it 'links to a valid reference' do
+      doc = reference_filter("See #{reference}")
+
+      expect(doc.css('a').first.attr('href'))
+        .to eq urls.project_merge_request_url(project2, merge)
+    end
+
+    it 'link has valid text' do
+      doc = reference_filter("Merge (#{reference}.)")
+
+      expect(doc.css('a').first.text).to eq("#{project2.path}!#{merge.iid}")
+    end
+
+    it 'has valid text' do
+      doc = reference_filter("Merge (#{reference}.)")
+
+      expect(doc.text).to eq("Merge (#{project2.path}!#{merge.iid}.)")
+    end
+
+    it 'ignores invalid merge IDs on the referenced project' do
+      exp = act = "Merge #{invalidate_reference(reference)}"
+
+      expect(reference_filter(act).to_html).to eq exp
+    end
+  end
+
+  context 'cross-project shorthand reference' do
+    let(:namespace) { create(:namespace) }
+    let(:project)   { create(:project, :public, namespace: namespace) }
+    let(:project2)  { create(:project, :public, namespace: namespace) }
+    let!(:merge)    { create(:merge_request, source_project: project2) }
+    let(:reference) { "#{project2.path}!#{merge.iid}" }
+
+    it 'links to a valid reference' do
+      doc = reference_filter("See #{reference}")
+
+      expect(doc.css('a').first.attr('href'))
+        .to eq urls.project_merge_request_url(project2, merge)
+    end
+
+    it 'link has valid text' do
+      doc = reference_filter("Merge (#{reference}.)")
+
+      expect(doc.css('a').first.text).to eq("#{project2.path}!#{merge.iid}")
+    end
+
+    it 'has valid text' do
+      doc = reference_filter("Merge (#{reference}.)")
+
+      expect(doc.text).to eq("Merge (#{project2.path}!#{merge.iid}.)")
     end
 
     it 'ignores invalid merge IDs on the referenced project' do
@@ -116,18 +200,28 @@ describe Banzai::Filter::MergeRequestReferenceFilter, lib: true do
     let(:namespace) { create(:namespace, name: 'cross-reference') }
     let(:project2)  { create(:project, :public, namespace: namespace) }
     let(:merge)     { create(:merge_request, source_project: project2, target_project: project2) }
-    let(:reference) { urls.namespace_project_merge_request_url(project2.namespace, project2, merge) + '/diffs#note_123' }
+    let(:reference) { urls.project_merge_request_url(project2, merge) + '/diffs#note_123' }
 
     it 'links to a valid reference' do
       doc = reference_filter("See #{reference}")
 
-      expect(doc.css('a').first.attr('href')).
-        to eq reference
+      expect(doc.css('a').first.attr('href'))
+        .to eq reference
     end
 
     it 'links with adjacent text' do
       doc = reference_filter("Merge (#{reference}.)")
       expect(doc.to_html).to match(/\(<a.+>#{Regexp.escape(merge.to_reference(project))} \(diffs, comment 123\)<\/a>\.\)/)
+    end
+  end
+
+  context 'group context' do
+    it 'links to a valid reference' do
+      reference = "#{project.full_path}!#{merge.iid}"
+
+      result = reference_filter("See #{reference}", { project: nil, group: create(:group) } )
+
+      expect(result.css('a').first.attr('href')).to eq(urls.project_merge_request_url(project, merge))
     end
   end
 end

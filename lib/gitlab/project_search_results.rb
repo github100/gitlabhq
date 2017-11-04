@@ -62,7 +62,7 @@ module Gitlab
         data << line.sub(ref, '').sub(filename, '').sub(/^:-\d+-/, '').sub(/^::\d+:/, '')
       end
 
-      OpenStruct.new(
+      FoundBlob.new(
         filename: filename,
         basename: basename,
         ref: ref,
@@ -71,29 +71,25 @@ module Gitlab
       )
     end
 
+    def single_commit_result?
+      commits_count == 1 && total_result_count == 1
+    end
+
+    def total_result_count
+      issues_count + merge_requests_count + milestones_count + notes_count + blobs_count + wiki_blobs_count + commits_count
+    end
+
     private
 
     def blobs
-      @blobs ||= begin
-        blobs = project.repository.search_files_by_content(query, repository_ref).first(100)
-        found_file_names = Set.new
+      return [] unless Ability.allowed?(@current_user, :download_code, @project)
 
-        results = blobs.map do |blob|
-          blob = self.class.parse_search_result(blob)
-          found_file_names << blob.filename
-
-          [blob.filename, blob]
-        end
-
-        project.repository.search_files_by_name(query, repository_ref).first(100).each do |filename|
-          results << [filename, nil] unless found_file_names.include?(filename)
-        end
-
-        results.sort_by(&:first)
-      end
+      @blobs ||= Gitlab::FileFinder.new(project, repository_ref).find(query)
     end
 
     def wiki_blobs
+      return [] unless Ability.allowed?(@current_user, :read_wiki, @project)
+
       @wiki_blobs ||= begin
         if project.wiki_enabled? && query.present?
           project_wiki = ProjectWiki.new(project)
@@ -110,11 +106,29 @@ module Gitlab
     end
 
     def notes
-      @notes ||= project.notes.user.search(query, as_user: @current_user).order('updated_at DESC')
+      @notes ||= NotesFinder.new(project, @current_user, search: query).execute.user.order('updated_at DESC')
     end
 
     def commits
-      @commits ||= project.repository.find_commits_by_message(query)
+      @commits ||= find_commits(query)
+    end
+
+    def find_commits(query)
+      return [] unless Ability.allowed?(@current_user, :download_code, @project)
+
+      commits = find_commits_by_message(query)
+      commit_by_sha = find_commit_by_sha(query)
+      commits |= [commit_by_sha] if commit_by_sha
+      commits
+    end
+
+    def find_commits_by_message(query)
+      project.repository.find_commits_by_message(query)
+    end
+
+    def find_commit_by_sha(query)
+      key = query.strip
+      project.repository.commit(key) if Commit.valid_hash?(key)
     end
 
     def project_ids_relation

@@ -1,22 +1,32 @@
-/* eslint-disable func-names, space-before-function-paren, wrap-iife, no-var, quotes, consistent-return, no-undef, no-new, prefer-arrow-callback, no-return-assign, one-var, one-var-declaration-per-line, object-shorthand, comma-dangle, no-else-return, newline-per-chained-call, no-shadow, semi, vars-on-top, indent, prefer-template, padded-blocks, max-len */
+/* eslint-disable func-names, space-before-function-paren, wrap-iife, no-var, quotes, consistent-return, no-new, prefer-arrow-callback, no-return-assign, one-var, one-var-declaration-per-line, object-shorthand, comma-dangle, no-else-return, newline-per-chained-call, no-shadow, vars-on-top, prefer-template, max-len */
+/* global ProjectSelect */
+
+import Cookies from 'js-cookie';
+
 (function() {
   this.Project = (function() {
     function Project() {
-      $('ul.clone-options-dropdown a').click(function() {
-        var url;
-        if ($(this).hasClass('active')) {
-          return;
-        }
-        $('.active').not($(this)).removeClass('active');
-        $(this).toggleClass('active');
-        url = $("#project_clone").val();
-        $('#project_clone').val(url);
+      const $cloneOptions = $('ul.clone-options-dropdown');
+      const $projectCloneField = $('#project_clone');
+      const $cloneBtnText = $('a.clone-dropdown-btn span');
+
+      const selectedCloneOption = $cloneBtnText.text().trim();
+      if (selectedCloneOption.length > 0) {
+        $(`a:contains('${selectedCloneOption}')`, $cloneOptions).addClass('is-active');
+      }
+
+      $('a', $cloneOptions).on('click', (e) => {
+        const $this = $(e.currentTarget);
+        const url = $this.attr('href');
+
+        e.preventDefault();
+
+        $('.is-active', $cloneOptions).not($this).removeClass('is-active');
+        $this.toggleClass('is-active');
+        $projectCloneField.val(url);
+        $cloneBtnText.text($this.text());
+
         return $('.clone').text(url);
-      // Git protocol switcher
-      // Remove the active class for all buttons (ssh, http, kerberos if shown)
-      // Add the active class for the clicked button
-      // Update the input field
-      // Update the command line instructions
       });
       // Ref switcher
       this.initRefSwitcher();
@@ -43,10 +53,6 @@
           return _this.changeProject($(e.currentTarget).val());
         };
       })(this));
-      return $('.js-projects-dropdown-toggle').on('click', function(e) {
-        e.preventDefault();
-        return $('.js-projects-dropdown').select2('open');
-      });
     };
 
     Project.prototype.changeProject = function(url) {
@@ -54,6 +60,11 @@
     };
 
     Project.prototype.initRefSwitcher = function() {
+      var refListItem = document.createElement('li');
+      var refLink = document.createElement('a');
+
+      refLink.href = '#';
+
       return $('.js-project-refs-dropdown').each(function() {
         var $dropdown, selected;
         $dropdown = $(this);
@@ -63,7 +74,8 @@
             return $.ajax({
               url: $dropdown.data('refs-url'),
               data: {
-                ref: $dropdown.data('ref')
+                ref: $dropdown.data('ref'),
+                search: term
               },
               dataType: "json"
             }).done(function(refs) {
@@ -72,16 +84,30 @@
           },
           selectable: true,
           filterable: true,
+          filterRemote: true,
           filterByText: true,
+          inputFieldName: $dropdown.data('input-field-name'),
           fieldName: $dropdown.data('field-name'),
           renderRow: function(ref) {
-            var link;
+            var li = refListItem.cloneNode(false);
+
             if (ref.header != null) {
-              return $('<li />').addClass('dropdown-header').text(ref.header);
+              li.className = 'dropdown-header';
+              li.textContent = ref.header;
             } else {
-              link = $('<a />').attr('href', '#').addClass(ref === selected ? 'is-active' : '').text(ref).attr('data-ref', ref);
-              return $('<li />').append(link);
+              var link = refLink.cloneNode(false);
+
+              if (ref === selected) {
+                link.className = 'is-active';
+              }
+
+              link.textContent = ref;
+              link.dataset.ref = ref;
+
+              li.appendChild(link);
             }
+
+            return li;
           },
           id: function(obj, $el) {
             return $el.attr('data-ref');
@@ -89,13 +115,19 @@
           toggleLabel: function(obj, $el) {
             return $el.text().trim();
           },
-          clicked: function(selected, $el, e) {
-            e.preventDefault()
+          clicked: function(options) {
+            const { e } = options;
+            e.preventDefault();
             if ($('input[name="ref"]').length) {
-              var $form = $dropdown.closest('form'),
-                  action = $form.attr('action'),
-                  divider = action.indexOf('?') < 0 ? '?' : '&';
-              Turbolinks.visit(action + '' + divider + '' + $form.serialize());
+              var $form = $dropdown.closest('form');
+
+              var $visit = $dropdown.data('visit');
+              var shouldVisit = $visit ? true : $visit;
+              var action = $form.attr('action');
+              var divider = action.indexOf('?') === -1 ? '?' : '&';
+              if (shouldVisit) {
+                gl.utils.visitUrl(`${action}${divider}${$form.serialize()}`);
+              }
             }
           }
         });
@@ -103,7 +135,5 @@
     };
 
     return Project;
-
   })();
-
-}).call(this);
+}).call(window);

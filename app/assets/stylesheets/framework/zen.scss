@@ -20,8 +20,9 @@
       outline: none;
       resize: none;
       height: 100vh;
+      max-height: calc(100vh - 10px);
       max-width: 900px;
-      margin: 0 auto;
+      margin: 0 auto 10px;
     }
 
     .zen-control-leave {
@@ -40,7 +41,7 @@
 }
 
 .zen-control-full {
-  color: $note-toolbar-color;
+  color: $gl-text-color-secondary;
 
   &:hover {
     color: $gl-link-color;
@@ -57,6 +58,6 @@
   font-size: 36px;
 
   &:hover {
-    color: $zen-control-hover-color;
+    color: $black;
   }
 }

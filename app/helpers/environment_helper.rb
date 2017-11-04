@@ -8,16 +8,18 @@ module EnvironmentHelper
   def environment_link_for_build(project, build)
     environment = environment_for_build(project, build)
     if environment
-      link_to environment.name, namespace_project_environment_path(project.namespace, project, environment)
+      link_to environment.name, project_environment_path(project, environment)
     else
       content_tag :span, build.expanded_environment_name
     end
   end
 
-  def deployment_link(deployment)
+  def deployment_link(deployment, text: nil)
     return unless deployment
 
-    link_to "##{deployment.iid}", [deployment.project.namespace.becomes(Namespace), deployment.project, deployment.deployable]
+    link_label = text ? text : "##{deployment.iid}"
+
+    link_to link_label, [deployment.project.namespace.becomes(Namespace), deployment.project, deployment.deployable]
   end
 
   def last_deployment_link_for_environment_build(project, build)

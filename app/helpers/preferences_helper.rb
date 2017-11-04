@@ -23,7 +23,7 @@ module PreferencesHelper
 
     if defined.size != DASHBOARD_CHOICES.size
       # Ensure that anyone adding new options updates this method too
-      raise RuntimeError, "`User` defines #{defined.size} dashboard choices," +
+      raise "`User` defines #{defined.size} dashboard choices," \
         " but `DASHBOARD_CHOICES` defined #{DASHBOARD_CHOICES.size}."
     else
       defined.map do |key, _|
@@ -35,14 +35,14 @@ module PreferencesHelper
 
   def project_view_choices
     [
-      ['Readme (default)', :readme],
-      ['Activity view', :activity],
-      ['Files view', :files]
+      ['Files and Readme (default)', :files],
+      ['Activity', :activity],
+      ['Readme', :readme]
     ]
   end
 
   def user_application_theme
-    Gitlab::Themes.for_user(current_user).css_class
+    @user_application_theme ||= Gitlab::Themes.for_user(current_user).css_class
   end
 
   def user_color_scheme
@@ -54,7 +54,7 @@ module PreferencesHelper
 
     user_view = current_user.project_view
 
-    if @project.feature_available?(:repository, current_user)
+    if can?(current_user, :download_code, @project)
       user_view
     elsif user_view == "activity"
       "activity"
@@ -68,6 +68,10 @@ module PreferencesHelper
   end
 
   def anonymous_project_view
-    @project.empty_repo? || !can?(current_user, :download_code, @project) ? 'activity' : 'readme'
+    if !@project.empty_repo? && can?(current_user, :download_code, @project)
+      'files'
+    else
+      'activity'
+    end
   end
 end

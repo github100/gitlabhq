@@ -1,9 +1,9 @@
 require 'spec_helper'
 
-describe Banzai::Filter::CommitReferenceFilter, lib: true do
+describe Banzai::Filter::CommitReferenceFilter do
   include FilterSpecHelper
 
-  let(:project) { create(:project, :public) }
+  let(:project) { create(:project, :public, :repository) }
   let(:commit)  { project.commit }
 
   it 'requires project context' do
@@ -26,8 +26,8 @@ describe Banzai::Filter::CommitReferenceFilter, lib: true do
         doc = reference_filter("See #{reference[0...size]}")
 
         expect(doc.css('a').first.text).to eq commit.short_id
-        expect(doc.css('a').first.attr('href')).
-          to eq urls.namespace_project_commit_url(project.namespace, project, reference)
+        expect(doc.css('a').first.attr('href'))
+          .to eq urls.project_commit_url(project, reference)
       end
     end
 
@@ -41,6 +41,7 @@ describe Banzai::Filter::CommitReferenceFilter, lib: true do
 
     it 'links with adjacent text' do
       doc = reference_filter("See (#{reference}.)")
+
       expect(doc.to_html).to match(/\(<a.+>#{commit.short_id}<\/a>\.\)/)
     end
 
@@ -48,8 +49,6 @@ describe Banzai::Filter::CommitReferenceFilter, lib: true do
       invalid = invalidate_reference(reference)
       exp = act = "See #{invalid}"
 
-      expect(project).to receive(:valid_repo?).and_return(true)
-      expect(project.repository).to receive(:commit).with(invalid)
       expect(reference_filter(act).to_html).to eq exp
     end
 
@@ -91,47 +90,98 @@ describe Banzai::Filter::CommitReferenceFilter, lib: true do
       link = doc.css('a').first.attr('href')
 
       expect(link).not_to match %r(https?://)
-      expect(link).to eq urls.namespace_project_commit_url(project.namespace, project, reference, only_path: true)
+      expect(link).to eq urls.project_commit_url(project, reference, only_path: true)
     end
   end
 
-  context 'cross-project reference' do
-    let(:namespace) { create(:namespace, name: 'cross-reference') }
-    let(:project2)  { create(:project, :public, namespace: namespace) }
+  context 'cross-project / cross-namespace complete reference' do
+    let(:namespace) { create(:namespace) }
+    let(:project2)  { create(:project, :public, :repository, namespace: namespace) }
     let(:commit)    { project2.commit }
-    let(:reference) { commit.to_reference(project) }
+    let(:reference) { "#{project2.full_path}@#{commit.short_id}" }
 
-    it 'links to a valid reference' do
-      doc = reference_filter("See #{reference}")
+    it 'link has valid text' do
+      doc = reference_filter("See (#{reference}.)")
 
-      expect(doc.css('a').first.attr('href')).
-        to eq urls.namespace_project_commit_url(project2.namespace, project2, commit.id)
+      expect(doc.css('a').first.text).to eql("#{project2.full_path}@#{commit.short_id}")
     end
 
-    it 'links with adjacent text' do
-      doc = reference_filter("Fixed (#{reference}.)")
+    it 'has valid text' do
+      doc = reference_filter("See (#{reference}.)")
 
-      exp = Regexp.escape(project2.to_reference)
-      expect(doc.to_html).to match(/\(<a.+>#{exp}@#{commit.short_id}<\/a>\.\)/)
+      expect(doc.text).to eql("See (#{project2.full_path}@#{commit.short_id}.)")
     end
 
     it 'ignores invalid commit IDs on the referenced project' do
       exp = act = "Committed #{invalidate_reference(reference)}"
+
+      expect(reference_filter(act).to_html).to eq exp
+    end
+  end
+
+  context 'cross-project / same-namespace complete reference' do
+    let(:namespace) { create(:namespace) }
+    let(:project)   { create(:project, namespace: namespace) }
+    let(:project2)  { create(:project, :public, :repository, namespace: namespace) }
+    let(:commit)    { project2.commit }
+    let(:reference) { "#{project2.full_path}@#{commit.short_id}" }
+
+    it 'link has valid text' do
+      doc = reference_filter("See (#{reference}.)")
+
+      expect(doc.css('a').first.text).to eql("#{project2.path}@#{commit.short_id}")
+    end
+
+    it 'has valid text' do
+      doc = reference_filter("See (#{reference}.)")
+
+      expect(doc.text).to eql("See (#{project2.path}@#{commit.short_id}.)")
+    end
+
+    it 'ignores invalid commit IDs on the referenced project' do
+      exp = act = "Committed #{invalidate_reference(reference)}"
+
+      expect(reference_filter(act).to_html).to eq exp
+    end
+  end
+
+  context 'cross-project shorthand reference' do
+    let(:namespace) { create(:namespace) }
+    let(:project)   { create(:project, namespace: namespace) }
+    let(:project2)  { create(:project, :public, :repository, namespace: namespace) }
+    let(:commit)    { project2.commit }
+    let(:reference) { "#{project2.full_path}@#{commit.short_id}" }
+
+    it 'link has valid text' do
+      doc = reference_filter("See (#{reference}.)")
+
+      expect(doc.css('a').first.text).to eql("#{project2.path}@#{commit.short_id}")
+    end
+
+    it 'has valid text' do
+      doc = reference_filter("See (#{reference}.)")
+
+      expect(doc.text).to eql("See (#{project2.path}@#{commit.short_id}.)")
+    end
+
+    it 'ignores invalid commit IDs on the referenced project' do
+      exp = act = "Committed #{invalidate_reference(reference)}"
+
       expect(reference_filter(act).to_html).to eq exp
     end
   end
 
   context 'cross-project URL reference' do
-    let(:namespace) { create(:namespace, name: 'cross-reference') }
-    let(:project2)  { create(:project, :public, namespace: namespace) }
+    let(:namespace) { create(:namespace) }
+    let(:project2)  { create(:project, :public, :repository, namespace: namespace) }
     let(:commit)    { project2.commit }
-    let(:reference) { urls.namespace_project_commit_url(project2.namespace, project2, commit.id) }
+    let(:reference) { urls.project_commit_url(project2, commit.id) }
 
     it 'links to a valid reference' do
       doc = reference_filter("See #{reference}")
 
-      expect(doc.css('a').first.attr('href')).
-        to eq urls.namespace_project_commit_url(project2.namespace, project2, commit.id)
+      expect(doc.css('a').first.attr('href'))
+        .to eq urls.project_commit_url(project2, commit.id)
     end
 
     it 'links with adjacent text' do

@@ -23,7 +23,7 @@ module LfsRequest
     render(
       json: {
         message: 'Git LFS is not enabled on this GitLab server, contact your admin.',
-        documentation_url: help_url,
+        documentation_url: help_url
       },
       status: 501
     )
@@ -48,7 +48,7 @@ module LfsRequest
     render(
       json: {
         message: 'Access forbidden. Check your access level.',
-        documentation_url: help_url,
+        documentation_url: help_url
       },
       content_type: "application/vnd.git-lfs+json",
       status: 403
@@ -59,7 +59,7 @@ module LfsRequest
     render(
       json: {
         message: 'Not found.',
-        documentation_url: help_url,
+        documentation_url: help_url
       },
       content_type: "application/vnd.git-lfs+json",
       status: 404
@@ -94,10 +94,9 @@ module LfsRequest
     @storage_project ||= begin
       result = project
 
-      loop do
-        break unless result.forked?
-        result = result.forked_from_project
-      end
+      # TODO: Make this go to the fork_network root immeadiatly
+      # dependant on the discussion in: https://gitlab.com/gitlab-org/gitlab-ce/issues/39769
+      result = result.fork_source while result.forked?
 
       result
     end
@@ -105,5 +104,9 @@ module LfsRequest
 
   def objects
     @objects ||= (params[:objects] || []).to_a
+  end
+
+  def has_authentication_ability?(capability)
+    (authentication_abilities || []).include?(capability)
   end
 end

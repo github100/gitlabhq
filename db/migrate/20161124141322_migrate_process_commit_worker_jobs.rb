@@ -6,16 +6,17 @@ class MigrateProcessCommitWorkerJobs < ActiveRecord::Migration
 
   class Project < ActiveRecord::Base
     def self.find_including_path(id)
-      select("projects.*, CONCAT(namespaces.path, '/', projects.path) AS path_with_namespace").
-        joins('INNER JOIN namespaces ON namespaces.id = projects.namespace_id').
-        find_by(id: id)
+      select("projects.*, CONCAT(namespaces.path, '/', projects.path) AS path_with_namespace")
+        .joins('INNER JOIN namespaces ON namespaces.id = projects.namespace_id')
+        .find_by(id: id)
     end
 
     def repository_storage_path
-      Gitlab.config.repositories.storages[repository_storage]
+      Gitlab.config.repositories.storages[repository_storage]['path']
     end
 
     def repository_path
+      # TODO: review if the change from Legacy storage needs to reflect here as well.
       File.join(repository_storage_path, read_attribute(:path_with_namespace) + '.git')
     end
 
@@ -34,7 +35,7 @@ class MigrateProcessCommitWorkerJobs < ActiveRecord::Migration
       new_jobs = []
 
       while job = redis.lpop('queue:process_commit')
-        payload = JSON.load(job)
+        payload = JSON.parse(job)
         project = Project.find_including_path(payload['args'][0])
 
         next unless project
@@ -47,14 +48,14 @@ class MigrateProcessCommitWorkerJobs < ActiveRecord::Migration
 
         hash = {
           id: commit.oid,
-          message: commit.message,
+          message: encode(commit.message),
           parent_ids: commit.parent_ids,
           authored_date: commit.author[:time],
-          author_name: commit.author[:name],
-          author_email: commit.author[:email],
+          author_name: encode(commit.author[:name]),
+          author_email: encode(commit.author[:email]),
           committed_date: commit.committer[:time],
-          committer_email: commit.committer[:email],
-          committer_name: commit.committer[:name]
+          committer_email: encode(commit.committer[:email]),
+          committer_name: encode(commit.committer[:name])
         }
 
         payload['args'][2] = hash
@@ -75,7 +76,7 @@ class MigrateProcessCommitWorkerJobs < ActiveRecord::Migration
       new_jobs = []
 
       while job = redis.lpop('queue:process_commit')
-        payload = JSON.load(job)
+        payload = JSON.parse(job)
 
         payload['args'][2] = payload['args'][2]['id']
 
@@ -87,6 +88,16 @@ class MigrateProcessCommitWorkerJobs < ActiveRecord::Migration
           multi.lpush('queue:process_commit', j)
         end
       end
+    end
+  end
+
+  def encode(data)
+    encoding = Encoding::UTF_8
+
+    if data.encoding == encoding
+      data
+    else
+      data.encode(encoding, invalid: :replace, undef: :replace)
     end
   end
 end

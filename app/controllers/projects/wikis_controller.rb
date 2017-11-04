@@ -1,6 +1,6 @@
-require 'project_wiki'
-
 class Projects::WikisController < Projects::ApplicationController
+  include PreviewMarkdown
+
   before_action :authorize_read_wiki!
   before_action :authorize_create_wiki!, only: [:edit, :create, :history]
   before_action :authorize_admin_wiki!, only: :destroy
@@ -8,6 +8,7 @@ class Projects::WikisController < Projects::ApplicationController
 
   def pages
     @wiki_pages = Kaminari.paginate_array(@project_wiki.pages).page(params[:page])
+    @wiki_entries = WikiPage.group_by_directory(@wiki_pages)
   end
 
   def show
@@ -19,16 +20,12 @@ class Projects::WikisController < Projects::ApplicationController
       response.headers['Content-Security-Policy'] = "default-src 'none'"
       response.headers['X-Content-Security-Policy'] = "default-src 'none'"
 
-      if file.on_disk?
-        send_file file.on_disk_path, disposition: 'inline'
-      else
-        send_data(
-          file.raw_data,
-          type: file.mime_type,
-          disposition: 'inline',
-          filename: file.name
-        )
-      end
+      send_data(
+        file.raw_data,
+        type: file.mime_type,
+        disposition: 'inline',
+        filename: file.name
+      )
     else
       return render('empty') unless can?(current_user, :create_wiki, @project)
       @page = WikiPage.new(@project_wiki)
@@ -46,15 +43,19 @@ class Projects::WikisController < Projects::ApplicationController
     return render('empty') unless can?(current_user, :create_wiki, @project)
 
     @page = @project_wiki.find_page(params[:id])
+    @page = WikiPages::UpdateService.new(@project, current_user, wiki_params).execute(@page)
 
-    if @page = WikiPages::UpdateService.new(@project, current_user, wiki_params).execute(@page)
+    if @page.valid?
       redirect_to(
-        namespace_project_wiki_path(@project.namespace, @project, @page),
+        project_wiki_path(@project, @page),
         notice: 'Wiki was successfully updated.'
       )
     else
       render 'edit'
     end
+  rescue WikiPage::PageChangedError
+    @conflict = true
+    render 'edit'
   end
 
   def create
@@ -62,7 +63,7 @@ class Projects::WikisController < Projects::ApplicationController
 
     if @page.persisted?
       redirect_to(
-        namespace_project_wiki_path(@project.namespace, @project, @page),
+        project_wiki_path(@project, @page),
         notice: 'Wiki was successfully updated.'
       )
     else
@@ -75,7 +76,7 @@ class Projects::WikisController < Projects::ApplicationController
 
     unless @page
       redirect_to(
-        namespace_project_wiki_path(@project.namespace, @project, :home),
+        project_wiki_path(@project, :home),
         notice: "Page not found"
       )
     end
@@ -83,26 +84,11 @@ class Projects::WikisController < Projects::ApplicationController
 
   def destroy
     @page = @project_wiki.find_page(params[:id])
-    @page.delete if @page
+    WikiPages::DestroyService.new(@project, current_user).execute(@page)
 
-    redirect_to(
-      namespace_project_wiki_path(@project.namespace, @project, :home),
-      notice: "Page was successfully deleted"
-    )
-  end
-
-  def preview_markdown
-    text = params[:text]
-
-    ext = Gitlab::ReferenceExtractor.new(@project, current_user)
-    ext.analyze(text, author: current_user)
-
-    render json: {
-      body: view_context.markdown(text, pipeline: :wiki, project_wiki: @project_wiki, page_slug: params[:id]),
-      references: {
-        users: ext.users.map(&:username)
-      }
-    }
+    redirect_to project_wiki_path(@project, :home),
+                status: 302,
+                notice: "Page was successfully deleted"
   end
 
   def git_access
@@ -115,8 +101,7 @@ class Projects::WikisController < Projects::ApplicationController
 
     # Call #wiki to make sure the Wiki Repo is initialized
     @project_wiki.wiki
-
-    @sidebar_wiki_pages = @project_wiki.pages.first(15)
+    @sidebar_wiki_entries = WikiPage.group_by_directory(@project_wiki.pages.first(15))
   rescue ProjectWiki::CouldNotCreateWikiError
     flash[:notice] = "Could not create Wiki Repository at this time. Please try again later."
     redirect_to project_path(@project)
@@ -124,6 +109,6 @@ class Projects::WikisController < Projects::ApplicationController
   end
 
   def wiki_params
-    params[:wiki].slice(:title, :content, :format, :message)
+    params.require(:wiki).permit(:title, :content, :format, :message, :last_commit_sha)
   end
 end

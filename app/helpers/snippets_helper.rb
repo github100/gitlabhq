@@ -1,10 +1,28 @@
 module SnippetsHelper
   def reliable_snippet_path(snippet, opts = nil)
     if snippet.project_id?
-      namespace_project_snippet_path(snippet.project.namespace,
-                                     snippet.project, snippet, opts)
+      project_snippet_path(snippet.project, snippet, opts)
     else
       snippet_path(snippet, opts)
+    end
+  end
+
+  def download_snippet_path(snippet)
+    if snippet.project_id
+      raw_project_snippet_path(@project, snippet, inline: false)
+    else
+      raw_snippet_path(snippet, inline: false)
+    end
+  end
+
+  # Return the path of a snippets index for a user or for a project
+  #
+  # @returns String, path to snippet index
+  def subject_snippets_path(subject = nil, opts = nil)
+    if subject.is_a?(Project)
+      project_snippets_path(subject, opts)
+    else # assume subject === User
+      dashboard_snippets_path(opts)
     end
   end
 
@@ -31,7 +49,7 @@ module SnippetsHelper
         0,
         lined_content.size,
         surrounding_lines
-      ) if line.include?(query)
+      ) if line.downcase.include?(query.downcase)
     end
 
     used_lines.uniq.sort

@@ -23,7 +23,7 @@
     margin-right: 0;
   }
 
-  .issues-details-filters,
+  .issues-details-filters:not(.filtered-search-block),
   .dash-projects-filters,
   .check-all-holder {
     display: none;
@@ -34,10 +34,6 @@
   }
 
   .project-home-links {
-    display: none;
-  }
-
-  .project-avatar {
     display: none;
   }
 
@@ -54,7 +50,7 @@
     }
 
     // Display Star and Fork buttons without counters on mobile.
-    .project-action-buttons {
+    .project-repo-buttons {
       display: block;
 
       .count-buttons .btn {
@@ -100,8 +96,7 @@
 
 @media (max-width: $screen-sm-max) {
   .issues-filters {
-    .milestone-filter,
-    .labels-filter {
+    .milestone-filter {
       display: none;
     }
   }
@@ -111,11 +106,6 @@
     .new-issue-link {
       display: none;
     }
-  }
-
-  .issue_edited_ago,
-  .note_edited_ago {
-    display: none;
   }
 
   aside:not(.right-sidebar) {

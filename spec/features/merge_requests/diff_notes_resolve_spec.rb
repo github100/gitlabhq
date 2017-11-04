@@ -1,8 +1,8 @@
 require 'spec_helper'
 
-feature 'Diff notes resolve', feature: true, js: true do
+feature 'Diff notes resolve', :js do
   let(:user)          { create(:user) }
-  let(:project)       { create(:project, :public) }
+  let(:project)       { create(:project, :public, :repository) }
   let(:merge_request) { create(:merge_request_with_diffs, source_project: project, author: user, title: "Bug NS-04") }
   let!(:note)         { create(:diff_note_on_merge_request, project: project, noteable: merge_request) }
   let(:path)          { "files/ruby/popen.rb" }
@@ -19,7 +19,7 @@ feature 'Diff notes resolve', feature: true, js: true do
   context 'no discussions' do
     before do
       project.team << [user, :master]
-      login_as user
+      sign_in user
       note.destroy
       visit_merge_request
     end
@@ -33,7 +33,7 @@ feature 'Diff notes resolve', feature: true, js: true do
   context 'as authorized user' do
     before do
       project.team << [user, :master]
-      login_as user
+      sign_in user
       visit_merge_request
     end
 
@@ -88,14 +88,43 @@ feature 'Diff notes resolve', feature: true, js: true do
         end
       end
 
-      it 'hides resolved discussion' do
-        page.within '.diff-content' do
-          click_button 'Resolve discussion'
+      describe 'resolved discussion' do
+        before do
+          page.within '.diff-content' do
+            click_button 'Resolve discussion'
+          end
+
+          visit_merge_request
         end
 
-        visit_merge_request
+        describe 'timeline view' do
+          it 'hides when resolve discussion is clicked' do
+            expect(page).to have_selector('.discussion-body', visible: false)
+          end
 
-        expect(page).to have_selector('.discussion-body', visible: false)
+          it 'shows resolved discussion when toggled' do
+            find(".timeline-content .discussion[data-discussion-id='#{note.discussion_id}'] .discussion-toggle-button").click
+
+            expect(page.find(".timeline-content #note_#{note.noteable_id}")).to be_visible
+          end
+        end
+
+        describe 'side-by-side view' do
+          before do
+            page.within('.merge-request-tabs') { click_link 'Changes' }
+            page.find('#parallel-diff-btn').click
+          end
+
+          it 'hides when resolve discussion is clicked' do
+            expect(page).to have_selector('.diffs .diff-file .notes_holder', visible: false)
+          end
+
+          it 'shows resolved discussion when toggled' do
+            find('.diff-comment-avatar-holders').click
+
+            expect(find('.diffs .diff-file .notes_holder')).to be_visible
+          end
+        end
       end
 
       it 'allows user to resolve from reply form without a comment' do
@@ -191,13 +220,16 @@ feature 'Diff notes resolve', feature: true, js: true do
 
     context 'multiple notes' do
       before do
-        create(:diff_note_on_merge_request, project: project, noteable: merge_request)
+        create(:diff_note_on_merge_request, project: project, noteable: merge_request, in_reply_to: note)
         visit_merge_request
       end
 
       it 'does not mark discussion as resolved when resolving single note' do
-        page.first '.diff-content .note' do
+        page.within("#note_#{note.id}") do
           first('.line-resolve-btn').click
+
+          wait_for_requests
+
           expect(first('.line-resolve-btn')['data-original-title']).to eq("Resolved by #{user.name}")
         end
 
@@ -273,7 +305,7 @@ feature 'Diff notes resolve', feature: true, js: true do
         end
 
         page.within '.line-resolve-all-container' do
-          page.find('.discussion-next-btn').click
+          page.find('.discussion-next-btn').trigger('click')
         end
 
         expect(page.evaluate_script("$('body').scrollTop()")).to be > 0
@@ -296,7 +328,7 @@ feature 'Diff notes resolve', feature: true, js: true do
       it 'displays next discussion even if hidden' do
         page.all('.note-discussion').each do |discussion|
           page.within discussion do
-            click_link 'Toggle discussion'
+            click_button 'Toggle discussion'
           end
         end
 
@@ -400,7 +432,7 @@ feature 'Diff notes resolve', feature: true, js: true do
 
     before do
       project.team << [guest, :guest]
-      login_as guest
+      sign_in guest
     end
 
     context 'someone elses merge request' do
@@ -477,13 +509,13 @@ feature 'Diff notes resolve', feature: true, js: true do
       it 'shows resolved icon' do
         expect(page).to have_content '1/1 discussion resolved'
 
-        click_link 'Toggle discussion'
+        click_button 'Toggle discussion'
         expect(page).to have_selector('.line-resolve-btn.is-active')
       end
 
       it 'does not allow user to click resolve button' do
         expect(page).to have_selector('.line-resolve-btn.is-disabled')
-        click_link 'Toggle discussion'
+        click_button 'Toggle discussion'
 
         expect(page).to have_selector('.line-resolve-btn.is-disabled')
       end
@@ -492,6 +524,6 @@ feature 'Diff notes resolve', feature: true, js: true do
 
   def visit_merge_request(mr = nil)
     mr = mr || merge_request
-    visit namespace_project_merge_request_path(mr.project.namespace, mr.project, mr)
+    visit project_merge_request_path(mr.project, mr)
   end
 end

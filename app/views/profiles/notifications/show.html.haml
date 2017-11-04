@@ -1,23 +1,24 @@
 - page_title "Notifications"
+- @content_class = "limit-container-width" unless fluid_layout
 = render 'profiles/head'
 
 %div
   - if @user.errors.any?
-    %div.alert.alert-danger
+    .alert.alert-danger
       %ul
         - @user.errors.full_messages.each do |msg|
           %li= msg
 
   = hidden_field_tag :notification_type, 'global'
   .row
-    .col-lg-3.profile-settings-sidebar
+    .col-lg-4.profile-settings-sidebar
       %h4
         = page_title
       %p
         You can specify notification level per group or per project.
       %p
         By default, all projects and groups will use the global notifications setting.
-    .col-lg-9
+    .col-lg-8
       %h5
         Global notification settings
 
@@ -30,9 +31,14 @@
       %br
       .clearfix
       .form-group.pull-left.global-notification-setting
-        = render 'shared/notifications/button', notification_setting: @global_notification_setting, left_align: true
+        = render 'shared/notifications/button', notification_setting: @global_notification_setting
 
       .clearfix
+
+      = form_for @user, url: profile_notifications_path, method: :put do |f|
+        %label{ for: 'user_notified_of_own_activity' }
+          = f.check_box :notified_of_own_activity
+          %span Receive notifications about your own activity
 
       %hr
       %h5

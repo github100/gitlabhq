@@ -82,7 +82,7 @@ module Participable
           if attr.respond_to?(:call)
             source.instance_exec(current_user, ext, &attr)
           else
-            process << source.__send__(attr)
+            process << source.__send__(attr) # rubocop:disable GitlabSecurity/PublicSend
           end
         end
       when Enumerable, ActiveRecord::Relation
@@ -96,6 +96,11 @@ module Participable
 
     participants.merge(ext.users)
 
-    Ability.users_that_can_read_project(participants.to_a, project)
+    case self
+    when PersonalSnippet
+      Ability.users_that_can_read_personal_snippet(participants.to_a, self)
+    else
+      Ability.users_that_can_read_project(participants.to_a, project)
+    end
   end
 end

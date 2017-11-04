@@ -1,30 +1,36 @@
 require 'spec_helper'
 
-describe 'Deleted source branch', feature: true, js: true do
+# This test serves as a regression test for a bug that caused an error
+# message to be shown by JavaScript when the source branch was deleted.
+# Please do not remove "js: true".
+describe 'Deleted source branch', :js do
   let(:user) { create(:user) }
   let(:merge_request) { create(:merge_request) }
 
   before do
-    login_as user
+    sign_in user
     merge_request.project.team << [user, :master]
     merge_request.update!(source_branch: 'this-branch-does-not-exist')
-    visit namespace_project_merge_request_path(
-      merge_request.project.namespace,
-      merge_request.project, merge_request
-    )
+    visit project_merge_request_path(merge_request.project, merge_request)
   end
 
   it 'shows a message about missing source branch' do
     expect(page).to have_content(
-      'Source branch this-branch-does-not-exist does not exist'
+      'Source branch does not exist.'
     )
   end
 
-  it 'hides Discussion, Commits and Changes tabs' do
+  it 'still contains Discussion, Commits and Changes tabs' do
     within '.merge-request-details' do
-      expect(page).to have_no_content('Discussion')
-      expect(page).to have_no_content('Commits')
-      expect(page).to have_no_content('Changes')
+      expect(page).to have_content('Discussion')
+      expect(page).to have_content('Commits')
+      expect(page).to have_content('Changes')
     end
+
+    click_on 'Changes'
+    wait_for_requests
+
+    expect(page).to have_selector('.diffs.tab-pane .nothing-here-block')
+    expect(page).to have_content('Source branch does not exist.')
   end
 end

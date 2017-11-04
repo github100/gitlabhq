@@ -1,15 +1,28 @@
 require 'spec_helper'
 
-describe Key, models: true do
+describe Key, :mailer do
+  include Gitlab::CurrentSettings
+
+  describe 'modules' do
+    subject { described_class }
+    it { is_expected.to include_module(Gitlab::CurrentSettings) }
+  end
+
   describe "Associations" do
     it { is_expected.to belong_to(:user) }
   end
 
   describe "Validation" do
     it { is_expected.to validate_presence_of(:title) }
+    it { is_expected.to validate_length_of(:title).is_at_most(255) }
+
     it { is_expected.to validate_presence_of(:key) }
-    it { is_expected.to validate_length_of(:title).is_within(0..255) }
-    it { is_expected.to validate_length_of(:key).is_within(0..5000) }
+    it { is_expected.to validate_length_of(:key).is_at_most(5000) }
+    it { is_expected.to allow_value(attributes_for(:rsa_key_2048)[:key]).for(:key) }
+    it { is_expected.to allow_value(attributes_for(:dsa_key_2048)[:key]).for(:key) }
+    it { is_expected.to allow_value(attributes_for(:ecdsa_key_256)[:key]).for(:key) }
+    it { is_expected.to allow_value(attributes_for(:ed25519_key_256)[:key]).for(:key) }
+    it { is_expected.not_to allow_value('foo-bar').for(:key) }
   end
 
   describe "Methods" do
@@ -22,6 +35,21 @@ describe Key, models: true do
         expect(build(:key, user: user).publishable_key).to include("#{user.name} (#{Gitlab.config.gitlab.host})")
       end
     end
+
+    describe "#update_last_used_at" do
+      it 'updates the last used timestamp' do
+        key = build(:key)
+        service = double(:service)
+
+        expect(Keys::LastUsedService).to receive(:new)
+          .with(key)
+          .and_return(service)
+
+        expect(service).to receive(:execute)
+
+        key.update_last_used_at
+      end
+    end
   end
 
   context "validation of uniqueness (based on fingerprint uniqueness)" do
@@ -32,14 +60,16 @@ describe Key, models: true do
     end
 
     it "does not accept the exact same key twice" do
-      create(:key, user: user)
-      expect(build(:key, user: user)).not_to be_valid
+      first_key = create(:key, user: user)
+
+      expect(build(:key, user: user, key: first_key.key)).not_to be_valid
     end
 
     it "does not accept a duplicate key with a different comment" do
-      create(:key, user: user)
-      duplicate = build(:key, user: user)
+      first_key = create(:key, user: user)
+      duplicate = build(:key, user: user, key: first_key.key)
       duplicate.key << ' extra comment'
+
       expect(duplicate).not_to be_valid
     end
   end
@@ -49,23 +79,57 @@ describe Key, models: true do
       expect(build(:key)).to be_valid
     end
 
-    it 'rejects an unfingerprintable key that contains a space' do
+    it 'accepts a key with newline charecters after stripping them' do
       key = build(:key)
-
-      # Not always the middle, but close enough
-      key.key = key.key[0..100] + ' ' + key.key[101..-1]
-
-      expect(key).not_to be_valid
+      key.key = key.key.insert(100, "\n")
+      key.key = key.key.insert(40, "\r\n")
+      expect(key).to be_valid
     end
 
     it 'rejects the unfingerprintable key (not a key)' do
       expect(build(:key, key: 'ssh-rsa an-invalid-key==')).not_to be_valid
     end
+  end
 
-    it 'rejects the multiple line key' do
-      key = build(:key)
-      key.key.tr!(' ', "\n")
-      expect(key).not_to be_valid
+  context 'validate it meets key restrictions' do
+    where(:factory, :minimum, :result) do
+      forbidden = ApplicationSetting::FORBIDDEN_KEY_VALUE
+
+      [
+        [:rsa_key_2048,    0, true],
+        [:dsa_key_2048,    0, true],
+        [:ecdsa_key_256,   0, true],
+        [:ed25519_key_256, 0, true],
+
+        [:rsa_key_2048, 1024, true],
+        [:rsa_key_2048, 2048, true],
+        [:rsa_key_2048, 4096, false],
+
+        [:dsa_key_2048, 1024, true],
+        [:dsa_key_2048, 2048, true],
+        [:dsa_key_2048, 4096, false],
+
+        [:ecdsa_key_256, 256, true],
+        [:ecdsa_key_256, 384, false],
+
+        [:ed25519_key_256, 256, true],
+        [:ed25519_key_256, 384, false],
+
+        [:rsa_key_2048,    forbidden, false],
+        [:dsa_key_2048,    forbidden, false],
+        [:ecdsa_key_256,   forbidden, false],
+        [:ed25519_key_256, forbidden, false]
+      ]
+    end
+
+    with_them do
+      subject(:key) { build(factory) }
+
+      before do
+        stub_application_setting("#{key.public_key.type}_key_restriction" => minimum)
+      end
+
+      it { expect(key.valid?).to eq(result) }
     end
   end
 
@@ -90,6 +154,16 @@ describe Key, models: true do
 
     it 'strips white spaces' do
       expect(described_class.new(key: " #{valid_key} ").key).to eq(valid_key)
+    end
+
+    it 'invalidates the public_key attribute' do
+      key = build(:key)
+
+      original = key.public_key
+      key.key = valid_key
+
+      expect(original.key_text).not_to be_nil
+      expect(key.public_key.key_text).to eq(valid_key)
     end
   end
 end

@@ -1,8 +1,11 @@
-# Repositories
+# Repositories API
 
 ## List repository tree
 
-Get a list of repository files and directories in a project.
+Get a list of repository files and directories in a project. This endpoint can
+be accessed without authentication if the repository is publicly accessible.
+
+This command provides essentially the same functionality as the `git ls-tree` command. For more information, see the section _Tree Objects_ in the [Git internals documentation](https://git-scm.com/book/en/v2/Git-Internals-Git-Objects/#_tree_objects).
 
 ```
 GET /projects/:id/repository/tree
@@ -10,9 +13,9 @@ GET /projects/:id/repository/tree
 
 Parameters:
 
-- `id` (required) - The ID of a project
+- `id` (required) - The ID or [URL-encoded path of the project](README.md#namespaced-path-encoding) owned by the authenticated user
 - `path` (optional) - The path inside repository. Used to get contend of subdirectories
-- `ref_name` (optional) - The name of a repository branch or tag or if not given the default branch
+- `ref` (optional) - The name of a repository branch or tag or if not given the default branch
 - `recursive` (optional) - Boolean value used to get a recursive tree (false by default)
 
 ```json
@@ -69,9 +72,11 @@ Parameters:
 ]
 ```
 
-## Raw file content
+## Get a blob from repository
 
-Get the raw file contents for a file by commit SHA and path.
+Allows you to receive information about blob in repository like size and
+content. Note that blob content is Base64 encoded. This endpoint can be accessed
+without authentication if the repository is publicly accessible.
 
 ```
 GET /projects/:id/repository/blobs/:sha
@@ -79,26 +84,27 @@ GET /projects/:id/repository/blobs/:sha
 
 Parameters:
 
-- `id` (required) - The ID of a project
-- `sha` (required) - The commit or branch name
-- `filepath` (required) - The path the file
+- `id` (required) - The ID or [URL-encoded path of the project](README.md#namespaced-path-encoding) owned by the authenticated user
+- `sha` (required) - The blob SHA
 
 ## Raw blob content
 
-Get the raw file contents for a blob by blob SHA.
+Get the raw file contents for a blob by blob SHA. This endpoint can be accessed
+without authentication if the repository is publicly accessible.
 
 ```
-GET /projects/:id/repository/raw_blobs/:sha
+GET /projects/:id/repository/blobs/:sha/raw
 ```
 
 Parameters:
 
-- `id` (required) - The ID of a project
+- `id` (required) - The ID or [URL-encoded path of the project](README.md#namespaced-path-encoding) owned by the authenticated user
 - `sha` (required) - The blob SHA
 
 ## Get file archive
 
-Get an archive of the repository
+Get an archive of the repository. This endpoint can be accessed without
+authentication if the repository is publicly accessible.
 
 ```
 GET /projects/:id/repository/archive
@@ -106,10 +112,13 @@ GET /projects/:id/repository/archive
 
 Parameters:
 
-- `id` (required) - The ID of a project
+- `id` (required) - The ID or [URL-encoded path of the project](README.md#namespaced-path-encoding) owned by the authenticated user
 - `sha` (optional) - The commit SHA to download defaults to the tip of the default branch
 
 ## Compare branches, tags or commits
+
+This endpoint can be accessed without authentication if the repository is
+publicly accessible.
 
 ```
 GET /projects/:id/repository/compare
@@ -117,7 +126,7 @@ GET /projects/:id/repository/compare
 
 Parameters:
 
-- `id` (required) - The ID of a project
+- `id` (required) - The ID or [URL-encoded path of the project](README.md#namespaced-path-encoding) owned by the authenticated user
 - `from` (required) - the commit SHA or branch name
 - `to` (required) - the commit SHA or branch name
 
@@ -163,7 +172,8 @@ Response:
 
 ## Contributors
 
-Get repository contributors list
+Get repository contributors list. This endpoint can be accessed without
+authentication if the repository is publicly accessible.
 
 ```
 GET /projects/:id/repository/contributors
@@ -171,7 +181,7 @@ GET /projects/:id/repository/contributors
 
 Parameters:
 
-- `id` (required) - The ID of a project
+- `id` (required) - The ID or [URL-encoded path of the project](README.md#namespaced-path-encoding) owned by the authenticated user
 
 Response:
 
